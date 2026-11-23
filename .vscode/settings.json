@@ -2,12 +2,25 @@
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.import.gradle.enabled": true,
   "java.compile.nullAnalysis.mode": "disabled",
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/.metadata/**",
+    "**/archetype-resources/**",
+    "**/META-INF/maven/**",
+    "**/reference/**"
+  ],
   "files.exclude": {
     "**/.gradle": true,
     "**/bin": true
   },
+  "files.watcherExclude": {
+    "**/reference/**": true,
+    "**/run/**": true,
+    "**/build/**": true
+  },
   "search.exclude": {
     "build/**": true,
-    "run/**": true
+    "run/**": true,
+    "reference/*.zip": true
   }
 }

@@ -29,7 +29,7 @@ libs/     IE + TaCZ jars for the dev environment (not committed), see libs/READM
 
 1. Install a JDK. Gradle runs on any JDK from 17 to 21 and downloads Java 17 for compiling by itself.
 2. Put the two dependency jars in `libs/`, as listed in [libs/README.md](libs/README.md).
-3. In VS Code, install the recommended extensions when prompted (Java Extension Pack and Gradle for Java).
+3. In VS Code, install the recommended extensions when prompted (Java Extension Pack and Gradle for Java). In your VS Code user settings, set `"java.import.gradle.java.home"` to a JDK 17 or 21 folder. The Java extension ships with Java 25, which Gradle 8.8 can't run on.
 4. Build once from the repo root. The first run decompiles Minecraft and takes a few minutes:
    ```bat
    gradlew.bat build
