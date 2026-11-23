@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "immersive_munitions:brass_block"
+    }
+  ],
+  "result": {
+    "item": "immersive_munitions:brass_ingot",
+    "count": 9
+  }
+}

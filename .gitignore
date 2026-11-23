@@ -1,0 +1,52 @@
+# gradle
+build/
+.gradle/
+out/
+bin/
+
+# dev game folders (worlds, logs, configs from runClient/runServer/runData)
+run/
+run-data/
+mcmodsrepo/
+
+# third-party mod jars: download locally, see libs/README.md
+libs/*.jar
+
+# eclipse
+*.launch
+.settings/
+.metadata/
+.classpath
+.project
+eclipse/
+
+# idea
+*.ipr
+*.iws
+*.iml
+.idea/
+
+# vscode: keep shared settings, ignore generated launch configs
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# art script scratch output
+art/**/out64/
+art/**/molds_out/
+art/**/*_preview.png
+art/**/pellets_*.png
+art/**/bg.png
+__pycache__/
+
+# os
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Files from Forge MDK
+forge*changelog.txt
+
+# local copies of other mods' source code, for reading only (never committed)
+reference/*
+!reference/README.md

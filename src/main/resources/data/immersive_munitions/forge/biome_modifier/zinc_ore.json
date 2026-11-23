@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:add_features_unless_mod_loaded",
+  "biomes": "#minecraft:is_overworld",
+  "features": "immersive_munitions:zinc_ore_placed",
+  "step": "underground_ores",
+  "disabled_if_mod_loaded": "immersivegeology"
+}

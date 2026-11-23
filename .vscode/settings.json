@@ -1,0 +1,13 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.gradle.enabled": true,
+  "java.compile.nullAnalysis.mode": "disabled",
+  "files.exclude": {
+    "**/.gradle": true,
+    "**/bin": true
+  },
+  "search.exclude": {
+    "build/**": true,
+    "run/**": true
+  }
+}

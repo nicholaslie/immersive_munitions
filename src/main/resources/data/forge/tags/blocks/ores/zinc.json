@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "immersive_munitions:zinc_ore",
+    "immersive_munitions:deepslate_zinc_ore"
+  ]
+}

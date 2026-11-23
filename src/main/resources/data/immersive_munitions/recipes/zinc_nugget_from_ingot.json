@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "immersive_munitions:zinc_ingot"
+    }
+  ],
+  "result": {
+    "item": "immersive_munitions:zinc_nugget",
+    "count": 9
+  }
+}
