@@ -11,9 +11,12 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
-/** One public creative tab with four ordered subcategories. */
+/**
+ * One creative tab split into sections. The tab only shows the selected section;
+ * the section buttons on its left side are in client/CreativeSectionTabs.
+ */
 public final class ModTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ImmersiveMunitions.MODID);
 
@@ -32,79 +35,61 @@ public final class ModTabs {
         }
     }
 
-    public static volatile Section selectedSection = Section.SHELLS;
+    public static Section selectedSection = Section.SHELLS;
 
     public static final RegistryObject<CreativeModeTab> MAIN = TABS.register("main", () ->
             new CreativeModeTab.Builder(CreativeModeTab.Row.TOP, 0)
                     .title(Component.translatable("itemGroup." + ImmersiveMunitions.MODID))
                     .icon(() -> new ItemStack(CreativeIconItems.EMPTY_CASING.get()))
-                    .displayItems(MunitionsCreativeTab::fillAllItems)
-                    .withTabFactory(MunitionsCreativeTab::new)
+                    .displayItems((params, output) -> allItems().forEach(output::accept))
+                    .withTabFactory(SectionedTab::new)
                     .build());
 
-    private static class MunitionsCreativeTab extends CreativeModeTab {
-        private static final ArrayList<ItemStack> DISPLAY_CACHE = new ArrayList<>();
-        private static boolean refreshDisplay = true;
+    public static void selectSection(Section section) {
+        if (selectedSection == section) return;
+        selectedSection = section;
+        SectionedTab.dirty = true;
+    }
 
-        private MunitionsCreativeTab(CreativeModeTab.Builder builder) {
+    private static List<ItemStack> allItems() {
+        List<ItemStack> stacks = new ArrayList<>();
+        for (Section section : Section.values()) addItems(section, stacks);
+        return stacks;
+    }
+
+    private static void addItems(Section section, Collection<ItemStack> out) {
+        switch (section) {
+            // ModItems also holds the block items, so this covers the ore and storage blocks
+            case MATERIALS -> ModItems.ITEMS.getEntries().forEach(item -> out.add(new ItemStack(item.get())));
+            case MOLDS -> AmmoComponentItems.CASING_MOLDS.values().forEach(item -> out.add(new ItemStack(item.get())));
+            case SHELLS -> AmmoComponentItems.EMPTY_CASINGS.values().forEach(item -> out.add(new ItemStack(item.get())));
+            case PROJECTILES -> AmmoComponentItems.PROJECTILES.values().forEach(item -> out.add(new ItemStack(item.get())));
+        }
+    }
+
+    /** Shows only the selected section; search still sees everything. */
+    private static class SectionedTab extends CreativeModeTab {
+        private static final List<ItemStack> shown = new ArrayList<>();
+        private static boolean dirty = true;
+
+        private SectionedTab(CreativeModeTab.Builder builder) {
             super(builder);
-            // Match the robust initialization pattern used by the Geology tab:
-            // populate the tab's all-items backing collection when constructed,
-            // so its first opening works even if no other addon tab was opened.
-            DISPLAY_CACHE.addAll(getSearchTabDisplayItems());
-        }
-
-        private static void fillAllItems(CreativeModeTab.ItemDisplayParameters parameters,
-                                         CreativeModeTab.Output output) {
-            ArrayList<ItemStack> all = new ArrayList<>();
-            for (Section section : Section.values()) addSectionStacks(section, all);
-            all.forEach(output::accept);
-        }
-
-        private static void invalidateDisplay() {
-            refreshDisplay = true;
-            DISPLAY_CACHE.clear();
         }
 
         @Override
         public Collection<ItemStack> getDisplayItems() {
-            if (refreshDisplay) {
-                DISPLAY_CACHE.clear();
-                addSectionStacks(selectedSection, DISPLAY_CACHE);
-                refreshDisplay = false;
+            if (dirty) {
+                shown.clear();
+                addItems(selectedSection, shown);
+                dirty = false;
             }
-            return DISPLAY_CACHE;
+            return shown;
         }
 
         @Override
         public Collection<ItemStack> getSearchTabDisplayItems() {
-            ArrayList<ItemStack> stacks = new ArrayList<>();
-            for (Section section : Section.values()) addSectionStacks(section, stacks);
-            return stacks;
+            return allItems();
         }
-    }
-
-    public static void selectSection(Section section) {
-        if (selectedSection != section) {
-            selectedSection = section;
-            MunitionsCreativeTab.invalidateDisplay();
-        }
-    }
-
-    private static void addSectionStacks(Section section, Collection<ItemStack> output) {
-        switch (section) {
-            case SHELLS -> addAll(AmmoComponentItems.EMPTY_CASINGS, output);
-            case MOLDS -> addAll(AmmoComponentItems.CASING_MOLDS, output);
-            case PROJECTILES -> addAll(AmmoComponentItems.PROJECTILES, output);
-            case MATERIALS -> {
-                ModItems.ITEMS.getEntries().forEach(item -> output.add(new ItemStack(item.get())));
-                ModBlocks.BLOCKS.getEntries().forEach(block -> output.add(new ItemStack(block.get())));
-            }
-        }
-    }
-
-    private static void addAll(Map<String, RegistryObject<Item>> items, Collection<ItemStack> output) {
-        items.values().forEach(item -> output.add(new ItemStack(item.get())));
     }
 
     private ModTabs() {}

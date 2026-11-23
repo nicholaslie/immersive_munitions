@@ -5,6 +5,7 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
@@ -18,21 +19,31 @@ import java.util.function.Supplier;
 public final class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ImmersiveMunitions.MODID);
 
-    public static final RegistryObject<Block> ZINC_ORE = block("zinc_ore", () ->
-            new DropExperienceBlock(Properties.copy(net.minecraft.world.level.block.Blocks.IRON_ORE), UniformInt.of(0, 2)));
-    public static final RegistryObject<Block> DEEPSLATE_ZINC_ORE = block("deepslate_zinc_ore", () ->
-            new DropExperienceBlock(Properties.copy(net.minecraft.world.level.block.Blocks.DEEPSLATE_IRON_ORE), UniformInt.of(0, 2)));
-    public static final RegistryObject<Block> RAW_ZINC_BLOCK = block("raw_zinc_block", () ->
-            new Block(Properties.copy(net.minecraft.world.level.block.Blocks.RAW_IRON_BLOCK)));
-    public static final RegistryObject<Block> ZINC_BLOCK = block("zinc_block", () ->
-            new Block(Properties.of().mapColor(MapColor.METAL).strength(5.0F, 6.0F).requiresCorrectToolForDrops().sound(SoundType.METAL)));
-    public static final RegistryObject<Block> BRASS_BLOCK = block("brass_block", () ->
-            new Block(Properties.of().mapColor(MapColor.GOLD).strength(5.0F, 6.0F).requiresCorrectToolForDrops().sound(SoundType.METAL)));
+    public static final RegistryObject<Block> ZINC_ORE = register("zinc_ore",
+            () -> new DropExperienceBlock(Properties.copy(Blocks.IRON_ORE), UniformInt.of(0, 2)));
+    public static final RegistryObject<Block> DEEPSLATE_ZINC_ORE = register("deepslate_zinc_ore",
+            () -> new DropExperienceBlock(Properties.copy(Blocks.DEEPSLATE_IRON_ORE), UniformInt.of(0, 2)));
+    public static final RegistryObject<Block> RAW_ZINC_BLOCK = register("raw_zinc_block",
+            () -> new Block(Properties.copy(Blocks.RAW_IRON_BLOCK)));
+    public static final RegistryObject<Block> ZINC_BLOCK = register("zinc_block",
+            () -> new Block(metalBlock(MapColor.METAL)));
+    public static final RegistryObject<Block> BRASS_BLOCK = register("brass_block",
+            () -> new Block(metalBlock(MapColor.GOLD)));
 
-    private static RegistryObject<Block> block(String name, Supplier<Block> sup) {
-        RegistryObject<Block> b = BLOCKS.register(name, sup);
-        ModItems.ITEMS.register(name, () -> new BlockItem(b.get(), new Item.Properties()));
-        return b;
+    private static Properties metalBlock(MapColor color) {
+        return Properties.of()
+                .mapColor(color)
+                .strength(5.0F, 6.0F)
+                .requiresCorrectToolForDrops()
+                .sound(SoundType.METAL);
     }
+
+    /** Registers the block and its block item (the item goes in ModItems.ITEMS). */
+    private static RegistryObject<Block> register(String name, Supplier<Block> factory) {
+        RegistryObject<Block> block = BLOCKS.register(name, factory);
+        ModItems.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+        return block;
+    }
+
     private ModBlocks() {}
 }

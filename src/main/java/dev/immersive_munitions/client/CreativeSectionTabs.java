@@ -6,6 +6,7 @@ import dev.immersive_munitions.registry.ModTabs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -18,79 +19,71 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.List;
 
-/** TaCZ-style category tabs for the Immersive Munitions creative inventory. */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT,
-        bus = Mod.EventBusSubscriber.Bus.FORGE)
+/**
+ * Section buttons down the left side of the creative inventory while our tab is open.
+ * Layout and tab sprites follow TaCZ's creative sidebar (GPLv3, see NOTICE.md).
+ */
+@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CreativeSectionTabs {
-    // TaCZ uses the vanilla recipe-book tab sheet for its creative-pack sidebar.
-    private static final ResourceLocation TAB_TEXTURE = new ResourceLocation("textures/gui/recipe_book.png");
-    private static final List<SectionButton> BUTTONS = new ArrayList<>();
+    private static final ResourceLocation TAB_TEXTURE = ResourceLocation.withDefaultNamespace("textures/gui/recipe_book.png");
+    private static final int SPACING = 29;
+    private static final List<SectionButton> buttons = new ArrayList<>();
 
     @SubscribeEvent
-    public static void initializeGui(ScreenEvent.Init.Post event) {
+    public static void onScreenInit(ScreenEvent.Init.Post event) {
         if (!(event.getScreen() instanceof CreativeModeInventoryScreen screen)) return;
 
-        BUTTONS.clear();
-        ModTabs.Section[] sections = ModTabs.Section.values();
+        buttons.clear();
         int x = screen.getGuiLeft() - 28;
         int y = screen.getGuiTop() + 11;
-        int spacing = 29;
-        boolean show = isMunitionsTabSelected();
-
-        for (int i = 0; i < sections.length; i++) {
-            ModTabs.Section section = sections[i];
-            SectionButton button = new SectionButton(x, y + i * spacing, section,
-                    pressed -> select(screen, section));
-            button.visible = show;
-            button.active = show && section != ModTabs.selectedSection;
-            BUTTONS.add(button);
+        for (ModTabs.Section section : ModTabs.Section.values()) {
+            SectionButton button = new SectionButton(x, y, section, b -> select(screen, section));
+            buttons.add(button);
             event.addListener(button);
+            y += SPACING;
         }
+        refreshButtons();
     }
 
+    // Checked every frame so the buttons follow tab switches and reopening the screen.
     @SubscribeEvent
-    public static void updateVisibility(ScreenEvent.BackgroundRendered event) {
-        if (!(event.getScreen() instanceof CreativeModeInventoryScreen)) return;
-
-        // Resolve visibility continuously instead of relying on a one-time flag.
-        // This also handles reopening the creative screen after Escape.
-        boolean show = isMunitionsTabSelected();
-        for (SectionButton button : BUTTONS) {
-            button.visible = show;
-            button.active = show && button.section != ModTabs.selectedSection;
-        }
+    public static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
+        if (event.getScreen() instanceof CreativeModeInventoryScreen) refreshButtons();
     }
 
-    private static boolean isMunitionsTabSelected() {
-        return CreativeModeInventoryScreen.selectedTab == ModTabs.MAIN.get();
+    private static void refreshButtons() {
+        boolean ourTabOpen = CreativeModeInventoryScreen.selectedTab == ModTabs.MAIN.get();
+        for (SectionButton button : buttons) {
+            button.visible = ourTabOpen;
+            button.active = ourTabOpen && button.section != ModTabs.selectedSection;
+        }
     }
 
     private static void select(CreativeModeInventoryScreen screen, ModTabs.Section section) {
         if (ModTabs.selectedSection == section) return;
         ModTabs.selectSection(section);
-        screen.resize(Minecraft.getInstance(), screen.width, screen.height);
+        screen.resize(Minecraft.getInstance(), screen.width, screen.height);  // rebuilds the item grid
     }
 
     private static final class SectionButton extends Button {
         private final ModTabs.Section section;
         private final ItemStack icon;
 
-        private SectionButton(int x, int y, ModTabs.Section section, OnPress onPress) {
+        SectionButton(int x, int y, ModTabs.Section section, OnPress onPress) {
             super(x, y, 32, 26, Component.empty(), onPress, DEFAULT_NARRATION);
             this.section = section;
             this.icon = new ItemStack(section.icon.get());
-            this.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
-                    Component.translatable("itemGroup." + ImmersiveMunitions.MODID + ".section." + section.id)));
+            setTooltip(Tooltip.create(Component.translatable(
+                    "itemGroup." + ImmersiveMunitions.MODID + ".section." + section.id)));
         }
 
         @Override
         protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
             if (!visible) return;
             boolean selected = section == ModTabs.selectedSection;
-            RenderSystem.enableBlend();
 
-            // Match TaCZ's own creative sidebar tab sprite and UV selection.
-            // TaCZ draws the selected tab with the raised/darker variant.
+            RenderSystem.enableBlend();
+            // Recipe book tab sprites: the selected one is the wider, raised variant
             graphics.blitNineSliced(TAB_TEXTURE, getX(), getY(), selected ? 31 : 28, 26,
                     3, selected ? 35 : 30, 26, selected ? 188 : 153, 2);
             graphics.renderItem(icon, getX() + 8, getY() + 5);

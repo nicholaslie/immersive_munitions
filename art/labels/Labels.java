@@ -5,23 +5,19 @@ import java.util.*;
 import java.util.List;
 import javax.imageio.ImageIO;
 
-/**
- * Immersive Munitions caliber labels: a plain 32x9 black bar in the top-left corner of each 64x64 sprite, with the
- * caliber in a 4x7 pixel font colored by weapon category. All label art (font, colors) is original to this mod.
+/*
+ * Stamps the caliber label (32x9 black bar, text colored by category) onto the unlabeled sprites in art/
+ * and writes the results into the mod and the bundled TaCZ icon pack, plus art/labels/preview.png.
  *
- * Run from the repo root:   java art/labels/Labels.java
+ *   java art/labels/Labels.java        (from the repo root)
  *
- * Inputs (unlabeled):  art/sprites/{rounds,casings,bullets}/*.png, art/molds/categories/mold_<category>.png
- * Outputs (labeled):   src/main/resources/assets/immersive_munitions/textures/item/{ammo/...,molds}/
- *                      src/main/resources/resourcepacks/immersive_munitions_ammo/assets/tacz/textures/ammo/slot/
- *                      art/labels/preview.png
- * A mod texture is only written if it already exists, so ids that the mod leaves out (6x43) stay out.
- * The RPG rocket is the exception: it is always written to the TaCZ slot icon.
+ * Only overwrites textures that already exist in the mod, so calibers we don't ship (6x43) stay out.
+ * The RPG rocket has no item of its own, so it only goes into the icon pack.
  */
 public class Labels {
     static final int LW = 32, LH = 9;
 
-    // ---------- 4x7 pixel font (M/W 5 wide, x and - 3 wide, '.' 1 wide) ----------
+    // 4x7 pixel font. M and W are 5 wide, x and - are 3, the dot is 1.
     static final Map<Character, String[]> FONT = new HashMap<>();
     static void g(char c, String... rows) { FONT.put(c, rows); }
     static {
@@ -62,7 +58,7 @@ public class Labels {
         return w - 1;
     }
 
-    // ---------- calibers: TaCZ ammo id, label text, mold/category ----------
+    // TaCZ ammo id, label text, category (picks the text color and the mold shape)
     record Cal(String id, String text, String cat) {}
     static final List<Cal> CALS = List.of(
         new Cal("9mm", "9MM", "pistol"), new Cal("22wmr", ".22WMR", "pistol"), new Cal("357mag", ".357", "pistol"),
@@ -74,7 +70,7 @@ public class Labels {
         new Cal("338", ".338", "sniper"), new Cal("45_70", "45-70", "sniper"), new Cal("50bmg", ".50BMG", "sniper"),
         new Cal("762x54", "7.62x54", "sniper"), new Cal("792x57", "7.92x57", "sniper"), new Cal("12g", "12GA", "shotgun"),
         new Cal("40mm", "40MM", "rpg"), new Cal("rpg_rocket", "RPG-7", "rpg"));
-    /** Text color per weapon category (also decides which category mold a caliber uses). */
+
     static final Map<String, Integer> CAT_TEXT = Map.of(
         "pistol", 0x8fd35e, "smg", 0x6cb2f0, "rifle", 0xf2a446, "sniper", 0xf06a5c,
         "shotgun", 0xc58cf0, "rpg", 0xb8c86e);
@@ -106,7 +102,7 @@ public class Labels {
         return out;
     }
 
-    // ---------- paths ----------
+
     static final String TEX = "src/main/resources/assets/immersive_munitions/textures/item/";
     static final String SLOT = "src/main/resources/resourcepacks/immersive_munitions_ammo/assets/tacz/textures/ammo/slot/";
 
@@ -143,7 +139,7 @@ public class Labels {
         preview(previewRows, new File("art/labels/preview.png"));
     }
 
-    /** Preview sheet. The grey behind each sprite is only drawn here; the textures themselves are transparent. */
+    // The grey squares only exist in the preview; the textures are transparent.
     static void preview(List<BufferedImage[]> rows, File out) throws Exception {
         int lk = 6, lcols = 5, lcell = LW * lk + 14, lrows = (CALS.size() + lcols - 1) / lcols;
         int k = 2, cell = 64 * k + 8, cols = 9, groups = (rows.size() + cols - 1) / cols;

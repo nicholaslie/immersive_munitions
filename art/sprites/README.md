@@ -45,7 +45,7 @@ Extra: `casing_12g_brass.png` and `casing_12g_brass_side.png` are all-brass 12 g
 
 ## Caliber label
 
-The sprites in this folder have **no label**. `art/labels/Labels.java` adds the caliber label (a 32x9 black bar with the caliber in a category color) in the top-left corner when it writes the mod textures. The label is original art. The sprites used to carry labels copied from TaCZ's slot icons; those were removed.
+The sprites in this folder have **no label**. `art/labels/Labels.java` adds the caliber label (a 32x9 black bar with the caliber in a category color) in the top-left corner when it writes the mod textures.
 
 ## Look and scale
 

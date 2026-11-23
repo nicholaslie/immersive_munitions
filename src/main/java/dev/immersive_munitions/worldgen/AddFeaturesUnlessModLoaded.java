@@ -3,7 +3,6 @@ package dev.immersive_munitions.worldgen;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.immersive_munitions.Config;
-import dev.immersive_munitions.ImmersiveMunitions;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.Biome;
@@ -15,9 +14,8 @@ import net.minecraftforge.common.world.ModifiableBiomeInfo;
 import net.minecraftforge.fml.ModList;
 
 /**
- * Same as forge:add_features, but skipped when {@code disabledIfModLoaded} is installed
- * (and the config allows yielding). Forge 1.20.1 has no load conditions for biome
- * modifiers, so this is done in code rather than JSON.
+ * forge:add_features, except it does nothing when the given mod is loaded (if the config allows that).
+ * Biome modifiers can't have load conditions on 1.20.1, so this has to happen in code.
  */
 public record AddFeaturesUnlessModLoaded(HolderSet<Biome> biomes, HolderSet<PlacedFeature> features,
                                          GenerationStep.Decoration step, String disabledIfModLoaded)
@@ -31,9 +29,8 @@ public record AddFeaturesUnlessModLoaded(HolderSet<Biome> biomes, HolderSet<Plac
     ).apply(i, AddFeaturesUnlessModLoaded::new));
 
     private boolean enabled() {
-        boolean master = Config.ZINC_WORLDGEN.get();
-        boolean yield = Config.YIELD_TO_GEOLOGY.get() && ModList.get().isLoaded(disabledIfModLoaded);
-        return master && !yield;
+        if (!Config.ZINC_WORLDGEN.get()) return false;
+        return !(Config.YIELD_TO_GEOLOGY.get() && ModList.get().isLoaded(disabledIfModLoaded));
     }
 
     @Override

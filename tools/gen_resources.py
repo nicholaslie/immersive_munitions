@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-"""Generates assets/ and data/ for the immersive_munitions mod. Re-runnable.
-Textures are derived from Scorched Guns Brass (GPLv3) by Ribs."""
+"""Zinc/brass textures, models, lang entries, loot tables, recipes, tags and worldgen.
+
+    python tools/gen_resources.py <Scorched Guns Brass textures dir>
+
+Set IE_TEX / IG_TEX to IE's and Immersive Geology's item texture folders to rebuild the
+dusts, plate, rod, wire and gear; without them the committed textures are kept.
+Ammo items (casings, projectiles, molds) are not handled here.
+"""
 import json, os, sys
 from PIL import Image
 
 MOD = "immersive_munitions"
 SB = sys.argv[1] if len(sys.argv) > 1 else "/tmp/sb/assets/scbrass/textures"
+IE_TEX = os.environ.get("IE_TEX", "/tmp/ie/assets/immersiveengineering/textures/item")
+IG_TEX = os.environ.get("IG_TEX", "/tmp/ig/assets/immersivegeology/textures/item")
 RES = "src/main/resources"
 A = f"{RES}/assets/{MOD}"
 D = f"{RES}/data/{MOD}"
@@ -43,17 +51,13 @@ brass_ramp = ramp(ld("item/brass_ingot.png")); zinc_ramp = ramp(ld("item/zinc_in
 save(remap(ld("item/zinc_nugget.png"), brass_ramp), "item/brass_nugget.png")   # derived
 
 # Dusts: IE's own metal dust pile (same shape IG's metal dust uses), remapped to each metal's palette.
-_IE = os.environ.get("IE_TEX", "/tmp/ie/assets/immersiveengineering/textures/item")
 for out, src_name, pal in [("brass_dust", "metal_dust_gold.png", brass_ramp), ("zinc_dust", "metal_dust_iron.png", zinc_ramp)]:
-    if os.path.exists(f"{_IE}/{src_name}"):
-        save(remap(Image.open(f"{_IE}/{src_name}").convert("RGBA"), pal), f"item/{out}.png")
+    if os.path.exists(f"{IE_TEX}/{src_name}"):
+        save(remap(Image.open(f"{IE_TEX}/{src_name}").convert("RGBA"), pal), f"item/{out}.png")
     else:
-        print(f"note: {_IE}/{src_name} not found; keeping committed item/{out}.png")
+        print(f"note: {IE_TEX}/{src_name} not found; keeping committed item/{out}.png")
 
-# Brass forms IE has press recipes for (plate/gear/rod/wire): derived from IE's own
-# metal textures (plate/rod/wire) and IG's greyscale gear, remapped to the brass palette.
-IE_TEX = os.environ.get("IE_TEX", "/tmp/ie/assets/immersiveengineering/textures/item")
-IG_TEX = os.environ.get("IG_TEX", "/tmp/ig/assets/immersivegeology/textures/item")
+# Brass forms IE has press recipes for: IE's plate/rod/wire and IG's greyscale gear, recolored to brass.
 for out, path in [("brass_plate", f"{IE_TEX}/metal_plate_copper.png"), ("brass_rod", f"{IE_TEX}/material_stick_iron.png"),
                   ("brass_wire", f"{IE_TEX}/material_wire_copper.png"), ("brass_gear", f"{IG_TEX}/greyscale/metal/gear.png")]:
     if os.path.exists(path):
@@ -71,7 +75,12 @@ lang = {f"item.{MOD}.{k}":v for k,v in ITEMS.items()}
 lang.update({f"block.{MOD}.{k}":v for k,v in BLOCKS.items()})
 lang[f"itemGroup.{MOD}"] = "Immersive Munitions"
 lang["immersive_munitions.config.zinc_worldgen"] = "Zinc worldgen"
-w(f"{A}/lang/en_us.json", lang)
+# Merge so the ammo item names already in the file survive
+lang_path = f"{A}/lang/en_us.json"
+if os.path.exists(lang_path):
+    with open(lang_path, encoding="utf-8") as f:
+        lang = {**json.load(f), **lang}
+w(lang_path, lang)
 
 for k in ITEMS:
     w(f"{A}/models/item/{k}.json", {"parent":"minecraft:item/generated","textures":{"layer0":f"{MOD}:item/{k}"}})

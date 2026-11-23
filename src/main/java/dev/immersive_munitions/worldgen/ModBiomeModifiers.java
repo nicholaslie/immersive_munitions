@@ -13,5 +13,6 @@ public final class ModBiomeModifiers {
 
     public static final RegistryObject<Codec<AddFeaturesUnlessModLoaded>> ADD_FEATURES_UNLESS_MOD_LOADED =
             SERIALIZERS.register("add_features_unless_mod_loaded", () -> AddFeaturesUnlessModLoaded.CODEC);
+
     private ModBiomeModifiers() {}
 }
