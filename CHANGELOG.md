@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.3-alpha (in development)
+## 0.0.3-alpha (2026-11-23)
 
 - New multiblock: the **Ammunition Assembler** (3 long, 3 tall, 2 deep). Casings ride a belt, get filled with gunpowder under the hopper, then a projectile is pressed in under the piston, and the finished TaCZ round comes out the far end. Runs on IE power, with a redstone off switch. One recipe per caliber (`data/immersive_munitions/recipes/ammo_assembly/`). The model and belt animation are still placeholders.
 - Fixed: dropped, held and conveyed TaCZ rounds showed a scrambled texture when the bundled icon pack was on (the pack was replacing TaCZ's 3D model skins with flat icons).
