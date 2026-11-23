@@ -69,4 +69,4 @@ python tools/gen_resources.py path\to\scbrass\textures
 
 ## Credits and license
 
-The mod's code and original art are licensed GPL-3.0-or-later; see [LICENSE](LICENSE). Some material comes from other mods: zinc/brass textures from Scorched Guns Brass (GPLv3), creative-tab code adapted from TaCZ (GPLv3), and caliber labels from TaCZ's icons (CC BY-NC-ND 4.0). It is also built on Immersive Engineering (Blu's License of Common Sense). [NOTICE.md](NOTICE.md) covers the details.
+The mod's code and original art are licensed GPL-3.0-or-later; see [LICENSE](LICENSE). Some material comes from other mods: zinc/brass textures from Scorched Guns Brass (GPLv3) and creative-tab code adapted from TaCZ (GPLv3). It is also built on Immersive Engineering (Blu's License of Common Sense). [NOTICE.md](NOTICE.md) covers the details.

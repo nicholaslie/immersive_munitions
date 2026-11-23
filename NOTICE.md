@@ -17,8 +17,7 @@ Immersive Munitions is an unofficial addon. It is not made by or endorsed by the
 TaCZ is licensed **GPL v3 for code** and **CC BY-NC-ND 4.0 for assets**.
 
 - **Code (GPL v3):** The creative-menu side tabs (`src/main/java/dev/immersive_munitions/client/CreativeSectionTabs.java`) adapt TaCZ's creative sidebar tab code: how the tabs are laid out and how their sprite UVs are picked. This is allowed under the GPL v3, and the adapted code is distributed under the GPL v3 as part of this mod. The mod also calls TaCZ's public API (`com.tacz.guns.api`) to build real TaCZ ammo items.
-- **Assets (CC BY-NC-ND 4.0):** The 32x8 caliber label in the top-left corner of the casing, bullet, round and mold sprites is copied pixel-for-pixel from TaCZ's ammo slot icons (`assets/tacz/textures/ammo/slot/<id>.png`). All rights to those labels belong to the TaCZ authors. They are not covered by this mod's GPL license, and they are credited to TaCZ here. Immersive Munitions is free and non-commercial. CC BY-NC-ND does not allow modified versions to be shared, so the maintainer intends to get the TaCZ authors' permission for this use, or replace the labels with original ones.
-- **Where:** `src/main/resources/assets/immersive_munitions/textures/item/ammo/`, `.../textures/item/molds/`, `src/main/resources/resourcepacks/immersive_munitions_ammo/`, `art/`
+- **Assets:** None. No TaCZ textures, models or other assets are included. The optional bundled resource pack (`src/main/resources/resourcepacks/immersive_munitions_ammo/`) replaces TaCZ's ammo icons with this mod's own artwork at TaCZ's texture paths. The caliber labels on the ammo sprites are original art (`art/labels/`). Releases up to 0.0.1-alpha used labels copied from TaCZ's slot icons; those were replaced in 0.0.2-alpha.
 - **Source:** https://github.com/MCModderAnchor/TACZ
 
 ## Immersive Engineering, by BluSunrize and Damien A.W. Hazard

@@ -11,7 +11,7 @@ For every TACZ ammo id that has a casing, there are four sprites. All are 64x64 
 
 ## Calibers (25 TACZ ids)
 
-`rpg_rocket` is the one TACZ ammo id with no casing, so it has no art here. (`20x82` has a slot icon in the pack but no ammo display and no gun uses it; it's skipped.)
+`rpg_rocket` is the one TACZ ammo id with no casing, so it has only `rounds/round_rpg_rocket.png`, drawn by `art/labels/Rocket.java` with the same ramps and lighting. (`20x82` has a slot icon in the pack but no ammo display and no gun uses it; it's skipped.)
 
 | TACZ id | Cartridge | Case | Bullet |
 |---|---|---|---|
@@ -45,7 +45,7 @@ Extra: `casing_12g_brass.png` and `casing_12g_brass_side.png` are all-brass 12 g
 
 ## Caliber label
 
-Every sprite carries TACZ's own caliber label (the dark slanted bar with white text and a colored underline) in the top-left corner. The pixels are copied 1:1 from TACZ's `textures/ammo/slot/<id>.png` (rows 16-23 of the 32x32 icon), so the text and colors are exactly TACZ's. It is 32x8 px, nothing else in the sprite was changed. Note: TACZ's own 6x43 label is yellow with black text in the default pack; it is copied as is. `casing_12g_brass*` use the `12 GA.` label.
+The sprites in this folder have **no label**. `art/labels/Labels.java` adds the caliber label (a 32x9 black bar with the caliber in a category color) in the top-left corner when it writes the mod textures. The label is original art. The sprites used to carry labels copied from TaCZ's slot icons; those were removed.
 
 ## Look and scale
 
@@ -60,7 +60,7 @@ brass `#3b2a1d #5c432f #8c5f3a #af794f #d7aa5e #eec168 #fbdc7d #fff9bf`; copper,
 
 ## Origin
 
-The sprites are original: built from real cartridge dimensions, not from the AI sheet and not from TACZ textures. The caliber labels are the one exception: they are copied from TACZ's slot icons.
+The sprites are original: built from real cartridge dimensions, not from the AI sheet and not from TACZ textures.
 
 ## source/
-Optional. `python3 build.py [id ...]` regenerates the sprites with labels (needs numpy + Pillow; `labels.py` needs TACZ's slot icons, see its SLOT path). Edit `calibers.py` to change a size or shape.
+Optional. `python3 build.py [id ...]` regenerates the unlabeled sprites into `out64/` (needs numpy + Pillow). Edit `calibers.py` to change a size or shape. Copy the results here, then run `java art/labels/Labels.java` from the repo root to update the mod.

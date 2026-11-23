@@ -1,7 +1,7 @@
 import os, sys
 from engine import make, VIEW_UP, VIEW_SIDE, VIEW_CASE, VIEW_CRIMP
 from calibers import *
-import pellets, labels   # labels.py reads TACZ's slot icons (edit SLOT in labels.py to point at your copy)
+import pellets   # labels are added afterwards by art/labels/Labels.java
 def jobs():
     for n in CAL:
         yield n,'casings',f'casing_{n}',build_casing(n),VIEW_CASE
@@ -24,6 +24,5 @@ if __name__=="__main__":
         if only and n not in only: continue
         os.makedirs(f'{out}/{folder}',exist_ok=True)
         im=pellets.build() if b is None else make(b,view,1.5 if view is VIEW_SIDE else 1.0)
-        cid='12g' if n=='12g' else n
-        labels.stamp(im,cid,1).save(f'{out}/{folder}/{fname}.png'); print(fname,end=' ',flush=True)
+        im.save(f'{out}/{folder}/{fname}.png'); print(fname,end=' ',flush=True)
     print()

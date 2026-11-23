@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.2-alpha (2026-11-23)
+
+- New caliber labels: a plain 32x9 black bar in the top-left corner with the caliber in a 4x7 pixel font. The text color shows the weapon category: green pistol, blue SMG, orange rifle, red sniper, purple shotgun, olive launcher. The label design (font and colors) is original to this mod. Sprite backgrounds stay transparent.
+- Replaced every label copied from TaCZ (rounds, casings, projectiles, molds and the bundled icon pack). The mod no longer contains any TaCZ art.
+- New RPG rocket icon (`rpg_rocket`) in the bundled TaCZ icon pack, with a matching `RPG-7` label.
+- Art pipeline: sprites in `art/` are now stored unlabeled, and `java art/labels/Labels.java` regenerates all labeled textures.
+
 ## 0.0.1-alpha (2026-11-23)
 
 New alpha base, built from the 0.2.19 source ("remove spent shells, revert tab icon").
