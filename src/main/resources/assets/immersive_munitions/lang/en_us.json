@@ -104,5 +104,6 @@
   "item.immersive_munitions.tab_icon_empty_casing": "Creative Tab Icon — Empty Casing",
   "item.immersive_munitions.tab_icon_mold": "Creative Tab Icon — Mold",
   "item.immersive_munitions.tab_icon_projectile": "Creative Tab Icon — Projectile",
-  "item.immersive_munitions.tab_icon_materials": "Creative Tab Icon — Materials"
+  "item.immersive_munitions.tab_icon_materials": "Creative Tab Icon — Materials",
+  "block.immersive_munitions.ammo_assembler": "Ammunition Assembler"
 }

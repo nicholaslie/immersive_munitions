@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_50ae"},
+  "projectile": {"item": "immersive_munitions:projectile_50ae"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "50ae", "count": 1}
+}

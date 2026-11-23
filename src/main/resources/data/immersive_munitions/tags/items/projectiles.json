@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    "immersive_munitions:projectile_12g",
+    "immersive_munitions:projectile_22wmr",
+    "immersive_munitions:projectile_300blk",
+    "immersive_munitions:projectile_308",
+    "immersive_munitions:projectile_30_06",
+    "immersive_munitions:projectile_338",
+    "immersive_munitions:projectile_357mag",
+    "immersive_munitions:projectile_40mm",
+    "immersive_munitions:projectile_45_70",
+    "immersive_munitions:projectile_45acp",
+    "immersive_munitions:projectile_46x30",
+    "immersive_munitions:projectile_500mag",
+    "immersive_munitions:projectile_50ae",
+    "immersive_munitions:projectile_50bmg",
+    "immersive_munitions:projectile_545x39",
+    "immersive_munitions:projectile_556x45",
+    "immersive_munitions:projectile_57x28",
+    "immersive_munitions:projectile_58x42",
+    "immersive_munitions:projectile_68x51fury",
+    "immersive_munitions:projectile_762x25",
+    "immersive_munitions:projectile_762x39",
+    "immersive_munitions:projectile_762x54",
+    "immersive_munitions:projectile_792x57",
+    "immersive_munitions:projectile_9mm"
+  ]
+}

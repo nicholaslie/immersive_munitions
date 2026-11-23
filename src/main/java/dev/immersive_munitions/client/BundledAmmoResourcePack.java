@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 /** Lists the TaCZ ammo icon pack (shipped inside the jar) in the Resource Packs screen. Off by default. */
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class BundledAmmoResourcePack {
+    public static final String PACK_ID = "builtin/immersive_munitions_ammo";
     private static final String PACK_PATH = "resourcepacks/immersive_munitions_ammo";
 
     @SubscribeEvent
@@ -25,7 +26,7 @@ public final class BundledAmmoResourcePack {
 
         var packRoot = modFile.getFile().findResource(PACK_PATH);
         Pack pack = Pack.readMetaAndCreate(
-                "builtin/immersive_munitions_ammo",
+                PACK_ID,
                 Component.literal("Immersive Munitions — TaCZ Ammunition Icons"),
                 false,
                 id -> new PathPackResources(id, packRoot, true),

@@ -57,7 +57,7 @@ The version is `mod_version` in `gradle.properties`, using `MAJOR.MINOR.PATCH-al
 
 ## Optional TaCZ icon pack
 
-The jar ships a resource pack, **Immersive Munitions — TaCZ Ammunition Icons**, that replaces TaCZ's ammo slot and UV textures with this mod's artwork. Players turn it on under **Options → Resource Packs**.
+The jar ships a resource pack, **Immersive Munitions — TaCZ Ammunition Icons**, that replaces TaCZ's ammo inventory icons with this mod's artwork (dropped and held rounds keep TaCZ's 3D model). Players turn it on under **Options → Resource Packs**.
 
 ## Regenerating materials
 

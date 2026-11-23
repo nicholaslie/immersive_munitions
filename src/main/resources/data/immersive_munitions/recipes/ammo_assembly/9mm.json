@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_9mm"},
+  "projectile": {"item": "immersive_munitions:projectile_9mm"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "9mm", "count": 1}
+}

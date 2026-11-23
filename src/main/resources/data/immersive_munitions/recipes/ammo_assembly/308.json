@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_308"},
+  "projectile": {"item": "immersive_munitions:projectile_308"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "308", "count": 1}
+}

@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_46x30"},
+  "projectile": {"item": "immersive_munitions:projectile_46x30"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "46x30", "count": 1}
+}

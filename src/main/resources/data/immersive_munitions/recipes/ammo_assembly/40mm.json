@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_40mm"},
+  "projectile": {"item": "immersive_munitions:projectile_40mm"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "40mm", "count": 1}
+}
