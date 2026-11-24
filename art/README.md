@@ -21,6 +21,7 @@ It adds the caliber label to each sprite and mold and writes them into the mod a
 | `sprites/source/` | Python generator for all of the above. See `sprites/README.md` |
 | `sprites/rounds/round_rpg_rocket.png` | RPG rocket, drawn by `labels/Rocket.java` (`java art/labels/Rocket.java`) |
 | `molds/` | 64x64 Immersive Engineering casing molds, one per weapon category. See `molds/README.md` |
+| `assembler/` | Ammunition Assembler model: `model.py` and `texture.py` (Blender, headless) and `AssemblerSheet.java`, which draws its texture sheet. See the comments at the top of each file |
 | `labels/` | `Labels.java`: the 32x9 black caliber label, its 4x7 pixel font, the caliber list and category colors, and the tool that writes the labeled textures. `preview.png` shows every result. |
 | `archive/` | Older art that is no longer used, kept for reference |
 

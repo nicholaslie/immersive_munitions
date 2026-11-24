@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "immersive_munitions:item/ammo/empty_casings/casing_762x25"
+    "layer0": "immersive_munitions:item/ammo/empty_casings/unlabeled/casing_762x25"
   }
 }

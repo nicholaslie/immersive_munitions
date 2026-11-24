@@ -50,3 +50,4 @@ forge*changelog.txt
 # local copies of other mods' source code, for reading only (never committed)
 reference/*
 !reference/README.md
+art/**/*.blend1

@@ -2,6 +2,7 @@ package dev.immersive_munitions.multiblock;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.energy.AveragingEnergyStorage;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IClientTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IServerTickableComponent;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.component.RedstoneControl.RSState;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IInitialMultiblockContext;
@@ -47,20 +48,28 @@ import java.util.function.Supplier;
  * Positions are in blueprint space: x 0..2 along the belt (input at 0), y 0..2, z 0 = back row, z 1 = belt row.
  * IE calls the back face FRONT and the input-end face RIGHT; see the bottling machine, which has the same layout.
  */
-public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.State>, IServerTickableComponent<AmmoAssemblerLogic.State> {
+public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.State>,
+        IServerTickableComponent<AmmoAssemblerLogic.State>, IClientTickableComponent<AmmoAssemblerLogic.State> {
     public static final BlockPos REDSTONE_POS = new BlockPos(1, 0, 1);
     private static final BlockPos BELT_START = new BlockPos(0, 1, 1);
     private static final CapabilityPosition CASING_INPUT = new CapabilityPosition(0, 1, 1, RelativeBlockFace.RIGHT);
     private static final MultiblockFace OUTPUT = new MultiblockFace(3, 1, 1, RelativeBlockFace.RIGHT);
-    private static final BlockPos GUNPOWDER_HOPPER = new BlockPos(0, 2, 1);
-    private static final CapabilityPosition PROJECTILE_INPUT = new CapabilityPosition(2, 2, 1, RelativeBlockFace.UP);
-    private static final CapabilityPosition ENERGY_INPUT = new CapabilityPosition(1, 1, 0, RelativeBlockFace.FRONT);
+    // Roof intakes over the back row (gunpowder over the first bay, projectiles over the middle bay),
+    // power plate on the back of the press bay
+    private static final CapabilityPosition GUNPOWDER_INPUT = new CapabilityPosition(0, 2, 0, RelativeBlockFace.UP);
+    private static final CapabilityPosition PROJECTILE_INPUT = new CapabilityPosition(1, 2, 0, RelativeBlockFace.UP);
+    private static final CapabilityPosition ENERGY_INPUT = new CapabilityPosition(2, 0, 0, RelativeBlockFace.FRONT);
 
-    // How far along the belt (0..1) each station sits: under the hopper, then under the piston
-    public static final float FILL_POINT = 0.2f;
-    public static final float PRESS_POINT = 0.8f;
-    // Casings keep at least this much of a cycle between each other
-    private static final float MIN_SPACING = 0.3f;
+    // How far along the belt (0..1) each station sits: one per block, centred on it
+    public static final float FILL_POINT = 1 / 6f;
+    public static final float PLACE_POINT = 0.5f;
+    public static final float PRESS_POINT = 5 / 6f;
+    // Casings keep at least this much of a cycle between each other. With a 60-tick recipe that is one casing
+    // every 7.5 ticks, slightly faster than a hopper (8 ticks per item), so a hopper feed never backs up.
+    private static final float MIN_SPACING = 1 / 8f;
+    // Enough room on the belt for a full cycle's worth of casings at that spacing
+    private static final int MAX_CASINGS = 8;
+    private static final int RESYNC_TICKS = 20;
 
     @Override
     public State createInitialState(IInitialMultiblockContext<State> ctx) {
@@ -71,10 +80,28 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     public void tickServer(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
         boolean active = state.processor.tickServer(state, ctx.getLevel(), state.rsState.isEnabled(ctx));
-        if (active != state.active) {
-            state.active = active;
+        boolean powder = !state.gunpowder.getStackInSlot(0).isEmpty();
+        boolean projectiles = !state.projectiles.getStackInSlot(0).isEmpty();
+        // The client runs the belt itself (tickClient); resync when what it relies on changes, and now and then
+        // while running so its casings don't drift
+        boolean resync = active != state.active || powder != state.hasGunpowder || projectiles != state.hasProjectiles
+                || (active && ++state.ticksSinceSync >= RESYNC_TICKS);
+        state.active = active;
+        state.hasGunpowder = powder;
+        state.hasProjectiles = projectiles;
+        if (resync) {
+            state.ticksSinceSync = 0;
             ctx.requestMasterBESync();
         }
+    }
+
+    @Override
+    public void tickClient(IMultiblockContext<State> ctx) {
+        State state = ctx.getState();
+        Level level = ctx.getLevel().getRawLevel();
+        for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : state.processor.getQueue())
+            if (process instanceof AssemblyProcess casing)
+                casing.tickClient(state, level, state.active && state.additionalCanProcessCheck(process, level));
     }
 
     @Override
@@ -96,8 +123,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         State state = ctx.getState();
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
             if (CASING_INPUT.equals(position)) return state.casingCap.cast(ctx);
-            if (GUNPOWDER_HOPPER.equals(position.posInMultiblock()) && position.side() != RelativeBlockFace.DOWN)
-                return state.gunpowderCap.cast(ctx);
+            if (GUNPOWDER_INPUT.equalsOrNullFace(position)) return state.gunpowderCap.cast(ctx);
             if (PROJECTILE_INPUT.equalsOrNullFace(position)) return state.projectileCap.cast(ctx);
         } else if (cap == ForgeCapabilities.ENERGY && ENERGY_INPUT.equalsOrNullFace(position)) {
             return state.energyCap.cast(ctx);
@@ -127,6 +153,12 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         private final AveragingEnergyStorage energy = new AveragingEnergyStorage(16000);
         private final DroppingMultiblockOutput output;
         private boolean active;
+        // Synced so the client can run the belt and show the feeder's projectile
+        boolean hasGunpowder;
+        boolean hasProjectiles;
+        private int ticksSinceSync;
+        // Client only: casings filled so far, which turns the powder handwheel
+        int clientFills;
 
         private final StoredCapability<IItemHandler> casingCap;
         private final StoredCapability<IItemHandler> gunpowderCap;
@@ -135,7 +167,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
 
         State(IInitialMultiblockContext<State> ctx) {
             Runnable markDirty = ctx.getMarkDirtyRunnable();
-            processor = new MultiblockProcessor<>(3, maxTicks -> MIN_SPACING, 3, markDirty, ctx.getSyncRunnable(),
+            processor = new MultiblockProcessor<>(MAX_CASINGS, maxTicks -> MIN_SPACING, MAX_CASINGS, markDirty, ctx.getSyncRunnable(),
                     AmmoAssemblyRecipe.RECIPES::getById);
             gunpowder = slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
             projectiles = slot(markDirty, stack -> stack.is(ModTags.PROJECTILES));
@@ -194,6 +226,14 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             return active;
         }
 
+        public boolean hasProjectiles() {
+            return hasProjectiles;
+        }
+
+        public int clientFills() {
+            return clientFills;
+        }
+
         @Override
         public void writeSaveNBT(CompoundTag nbt) {
             nbt.put("energy", energy.serializeNBT());
@@ -214,12 +254,16 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public void writeSyncNBT(CompoundTag nbt) {
             nbt.put("processor", processor.toNBT());
             nbt.putBoolean("active", active);
+            nbt.putBoolean("powder", hasGunpowder);
+            nbt.putBoolean("projectiles", hasProjectiles);
         }
 
         @Override
         public void readSyncNBT(CompoundTag nbt) {
             processor.fromNBT(nbt.get("processor"), AssemblyProcess::new);
             active = nbt.getBoolean("active");
+            hasGunpowder = nbt.getBoolean("powder");
+            hasProjectiles = nbt.getBoolean("projectiles");
         }
     }
 

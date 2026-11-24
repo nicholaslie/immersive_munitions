@@ -17,12 +17,12 @@ import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
  *   "projectile": {"item": "immersive_munitions:projectile_9mm"},
  *   "gunpowder": {"tag": "forge:gunpowder"},
  *   "result": {"ammo": "9mm", "count": 1},
- *   "time": 100, "energy": 2400        (optional)
+ *   "time": 60, "energy": 1200        (optional)
  * }
  */
 public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecipe> {
-    private static final int DEFAULT_TIME = 100;
-    private static final int DEFAULT_ENERGY = 2400;
+    private static final int DEFAULT_TIME = 60;      // ticks for one casing to cross the belt
+    private static final int DEFAULT_ENERGY = 1200;  // per round: 20 FE/t per casing, 160 FE/t with a full belt
 
     @Override
     public ItemStack getIcon() {

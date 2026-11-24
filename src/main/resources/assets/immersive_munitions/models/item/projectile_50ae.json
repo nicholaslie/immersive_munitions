@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "immersive_munitions:item/ammo/projectiles/bullet_50ae"
+    "layer0": "immersive_munitions:item/ammo/projectiles/unlabeled/bullet_50ae"
   }
 }

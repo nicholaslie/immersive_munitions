@@ -83,7 +83,8 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
         pose.popPose();
     }
 
-    private static BakedModel flatModel(ItemStack stack) {
+    /** Our flat model for a TaCZ round, or null when the icon pack is off or the round isn't one of ours. */
+    public static BakedModel flatModel(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
         if (!mc.getResourcePackRepository().getSelectedIds().contains(BundledAmmoResourcePack.PACK_ID)) return null;
         if (!(stack.getItem() instanceof IAmmo ammo)) return null;

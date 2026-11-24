@@ -8,6 +8,8 @@ import javax.imageio.ImageIO;
 /*
  * Stamps the caliber label (32x9 black bar, text colored by category) onto the unlabeled sprites in art/
  * and writes the results into the mod and the bundled TaCZ icon pack, plus art/labels/preview.png.
+ * Labels only show in inventories: the mod also gets the plain sprites, which items use everywhere else
+ * (dropped, held, on the assembler's belt). It writes the casing, projectile and mold item models for that too.
  *
  *   java art/labels/Labels.java        (from the repo root)
  *
@@ -104,9 +106,34 @@ public class Labels {
 
 
     static final String TEX = "src/main/resources/assets/immersive_munitions/textures/item/";
-    static final String SLOT = "src/main/resources/resourcepacks/immersive_munitions_ammo/assets/tacz/textures/ammo/slot/";
+    static final String MODELS = "src/main/resources/assets/immersive_munitions/models/item/";
+    static final String SLOT ="src/main/resources/resourcepacks/immersive_munitions_ammo/assets/tacz/textures/ammo/slot/";
 
     static BufferedImage read(String p) throws Exception { return ImageIO.read(new File(p)); }
+
+    /*
+     * One of our items that shows its label only in inventories: the item model uses the plain sprite
+     * (textures/.../unlabeled/), and models/item/labeled/ holds the labeled one, which
+     * client/LabeledItemModels swaps in for GUI rendering. Skipped if the mod has no such item.
+     */
+    static BufferedImage item(Cal c, String itemPrefix, String texDir, String texPrefix, BufferedImage plain) throws Exception {
+        BufferedImage labeled = stamp(plain, c);
+        String item = itemPrefix + c.id(), tex = texPrefix + c.id();
+        if (!new File(MODELS + item + ".json").exists()) return labeled;
+        write(labeled, TEX + texDir + tex + ".png", false);
+        write(plain, TEX + texDir + "unlabeled/" + tex + ".png", false);
+        writeModel(MODELS + item + ".json", texDir + "unlabeled/" + tex);
+        writeModel(MODELS + "labeled/" + item + ".json", texDir + tex);
+        return labeled;
+    }
+
+    static void writeModel(String path, String texture) throws Exception {
+        File f = new File(path);
+        f.getParentFile().mkdirs();
+        java.nio.file.Files.writeString(f.toPath(), "{\n  \"parent\": \"minecraft:item/generated\",\n  \"textures\": {\n"
+                + "    \"layer0\": \"immersive_munitions:item/" + texture + "\"\n  }\n}\n");
+        written++;
+    }
     static int written = 0;
     static void write(BufferedImage im, String p, boolean onlyIfExists) throws Exception {
         File f = new File(p);
@@ -120,22 +147,21 @@ public class Labels {
         if (!new File("art/labels").isDirectory()) throw new IllegalStateException("Run this from the repo root.");
         List<BufferedImage[]> previewRows = new ArrayList<>();
         for (Cal c : CALS) {
-            BufferedImage round = stamp(read("art/sprites/rounds/round_" + c.id() + ".png"), c);
+            BufferedImage plainRound = read("art/sprites/rounds/round_" + c.id() + ".png");
+            BufferedImage round = stamp(plainRound, c);
             boolean rocket = c.id().equals("rpg_rocket");
-            write(round, TEX + "ammo/loaded_round_reference/round_" + c.id() + ".png", !rocket);
+            // TaCZ draws the inventory icon from the icon pack (labeled); our flat world model uses the plain round
+            write(plainRound, TEX + "ammo/loaded_round_reference/round_" + c.id() + ".png", !rocket);
             write(round, SLOT + c.id() + ".png", !rocket);
             BufferedImage casing = null, bullet = null, mold = null;
             if (!rocket) {
-                casing = stamp(read("art/sprites/casings/casing_" + c.id() + ".png"), c);
-                bullet = stamp(read("art/sprites/bullets/bullet_" + c.id() + ".png"), c);
-                mold = stamp(read("art/molds/categories/mold_" + c.cat() + ".png"), c);
-                write(casing, TEX + "ammo/empty_casings/casing_" + c.id() + ".png", true);
-                write(bullet, TEX + "ammo/projectiles/bullet_" + c.id() + ".png", true);
-                write(mold, TEX + "molds/mold_casing_" + c.id() + ".png", true);
+                casing = item(c, "empty_casing_", "ammo/empty_casings/", "casing_", read("art/sprites/casings/casing_" + c.id() + ".png"));
+                bullet = item(c, "projectile_", "ammo/projectiles/", "bullet_", read("art/sprites/bullets/bullet_" + c.id() + ".png"));
+                mold = item(c, "mold_casing_", "molds/", "mold_casing_", read("art/molds/categories/mold_" + c.cat() + ".png"));
             }
             previewRows.add(new BufferedImage[]{round, casing, bullet, mold});
         }
-        System.out.println("wrote " + written + " textures");
+        System.out.println("wrote " + written + " files");
         preview(previewRows, new File("art/labels/preview.png"));
     }
 

@@ -14,12 +14,12 @@ import net.minecraft.world.level.Level;
 import java.util.function.BiFunction;
 
 /**
- * One casing riding the belt. It stops under the hopper until it gets its gunpowder,
- * then under the piston until it gets its projectile, then turns into the finished round.
+ * One casing riding the belt. It stops under the filler until it gets its gunpowder,
+ * then under the feeder until it gets its projectile, then the press seats it into the finished round.
  */
 public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe> {
     private boolean filled;
-    private boolean pressed;
+    private boolean placed;
 
     public AssemblyProcess(AmmoAssemblyRecipe recipe, NonNullList<ItemStack> casing) {
         super(recipe, AmmoAssemblerLogic.PRESS_POINT, casing);
@@ -28,15 +28,15 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     public AssemblyProcess(BiFunction<Level, ResourceLocation, AmmoAssemblyRecipe> getRecipe, CompoundTag nbt) {
         super(getRecipe, nbt);
         filled = nbt.getBoolean("filled");
-        pressed = nbt.getBoolean("pressed");
+        placed = nbt.getBoolean("placed");
     }
 
     public boolean isFilled() {
         return filled;
     }
 
-    public boolean isPressed() {
-        return pressed;
+    public boolean isPlaced() {
+        return placed;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
 
         State state = (State) context;
         if (reachesFill(level) && !state.take(state.gunpowder, recipe.gunpowder, true)) return false;
-        if (reachesPress(level) && !state.take(state.projectiles, recipe.projectile, true)) return false;
+        if (reachesPlace(level) && !state.take(state.projectiles, recipe.projectile, true)) return false;
         return true;
     }
 
@@ -61,27 +61,56 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
                 if (!state.take(state.gunpowder, recipe.gunpowder, false)) return;
                 filled = true;
             }
-            if (reachesPress(world)) {
+            if (reachesPlace(world)) {
                 if (!state.take(state.projectiles, recipe.projectile, false)) return;
-                pressed = true;
+                placed = true;
             }
         }
         super.doProcessTick(context, level);
     }
+
+    /**
+     * Client only: moves the casing one tick along, by the same rules the server uses, so the belt runs smoothly
+     * between syncs. Returns whether it moved. The server's next sync corrects any drift.
+     */
+    boolean tickClient(State state, Level level, boolean canMove) {
+        moving = false;
+        int max = getMaxTicks(level);
+        if (!canMove || processTick >= max) return false;
+        if (reachesFill(level)) {
+            if (!state.hasGunpowder) return false;
+            filled = true;
+            state.clientFills++;
+        }
+        if (reachesPlace(level)) {
+            if (!state.hasProjectiles) return false;
+            placed = true;
+        }
+        processTick++;
+        moving = true;
+        return true;
+    }
+
+    /** Client only: whether the casing moved on the last tick, so the renderer can interpolate. */
+    public boolean isMoving() {
+        return moving;
+    }
+
+    private transient boolean moving;
 
     // True on the tick the casing would move onto a station it hasn't been served by yet
     private boolean reachesFill(Level level) {
         return !filled && processTick + 1 >= AmmoAssemblerLogic.FILL_POINT * getMaxTicks(level);
     }
 
-    private boolean reachesPress(Level level) {
-        return !pressed && processTick + 1 >= AmmoAssemblerLogic.PRESS_POINT * getMaxTicks(level);
+    private boolean reachesPlace(Level level) {
+        return !placed && processTick + 1 >= AmmoAssemblerLogic.PLACE_POINT * getMaxTicks(level);
     }
 
     @Override
     public void writeExtraDataToNBT(CompoundTag nbt) {
         super.writeExtraDataToNBT(nbt);
         nbt.putBoolean("filled", filled);
-        nbt.putBoolean("pressed", pressed);
+        nbt.putBoolean("placed", placed);
     }
 }

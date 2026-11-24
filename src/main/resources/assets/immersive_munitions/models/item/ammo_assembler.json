@@ -1,3 +1,17 @@
 {
-  "parent": "immersive_munitions:block/ammo_assembler"
+  "loader": "forge:obj",
+  "model": "immersive_munitions:models/block/ammo_assembler.obj",
+  "flip_v": true,
+  "automatic_culling": false,
+  "textures": {"particle": "immersiveengineering:block/metal/sheetmetal_steel"},
+  "display": {
+    "gui": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "ground": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "fixed": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "head": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "firstperson_righthand": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "firstperson_lefthand": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "thirdperson_righthand": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]},
+    "thirdperson_lefthand": {"rotation": [20, -45, 0], "translation": [1.5, 2, 0], "scale": [0.25, 0.25, 0.25]}
+  }
 }

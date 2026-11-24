@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "immersive_munitions:item/molds/mold_casing_50ae"
+    "layer0": "immersive_munitions:item/molds/unlabeled/mold_casing_50ae"
   }
 }

@@ -30,6 +30,7 @@ public final class ModMultiblocks {
     public static final MultiblockRegistration<AmmoAssemblerLogic.State> AMMO_ASSEMBLER =
             new Builder<>(new AmmoAssemblerLogic(), "ammo_assembler")
                     .structure(() -> AmmoAssemblerMultiblock.INSTANCE)
+                    .notMirrored()
                     .redstone(state -> state.rsState, AmmoAssemblerLogic.REDSTONE_POS)
                     .defaultBEs(BLOCK_ENTITIES)
                     .defaultBlock(BLOCKS, ITEMS, metalMachine())

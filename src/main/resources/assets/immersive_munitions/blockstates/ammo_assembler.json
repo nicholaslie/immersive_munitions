@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": {"model": "immersive_munitions:block/ammo_assembler"}
+    "facing=north": {"model": "immersive_munitions:block/ammo_assembler_split", "uvlock": true},
+    "facing=east": {"model": "immersive_munitions:block/ammo_assembler_split", "uvlock": true, "y": 90},
+    "facing=south": {"model": "immersive_munitions:block/ammo_assembler_split", "uvlock": true, "y": 180},
+    "facing=west": {"model": "immersive_munitions:block/ammo_assembler_split", "uvlock": true, "y": 270}
   }
 }

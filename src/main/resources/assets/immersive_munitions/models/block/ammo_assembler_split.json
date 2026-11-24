@@ -1,0 +1,111 @@
+{
+  "parent": "minecraft:block/block",
+  "loader": "immersiveengineering:basic_split",
+  "dynamic": false,
+  "split_parts": [
+    [
+      -1,
+      -1,
+      0
+    ],
+    [
+      -1,
+      -1,
+      1
+    ],
+    [
+      -1,
+      0,
+      0
+    ],
+    [
+      -1,
+      0,
+      1
+    ],
+    [
+      -1,
+      1,
+      0
+    ],
+    [
+      -1,
+      1,
+      1
+    ],
+    [
+      0,
+      -1,
+      0
+    ],
+    [
+      0,
+      -1,
+      1
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      1,
+      -1,
+      0
+    ],
+    [
+      1,
+      -1,
+      1
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      1
+    ],
+    [
+      1,
+      1,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ]
+  ],
+  "inner_model": {
+    "parent": "minecraft:block/block",
+    "loader": "forge:obj",
+    "model": "immersive_munitions:models/block/ammo_assembler.obj",
+    "flip_v": true,
+    "automatic_culling": false,
+    "render_type": "minecraft:cutout",
+    "textures": {
+      "particle": "immersiveengineering:block/metal/sheetmetal_steel"
+    }
+  },
+  "textures": {
+    "particle": "immersiveengineering:block/metal/sheetmetal_steel"
+  }
+}
