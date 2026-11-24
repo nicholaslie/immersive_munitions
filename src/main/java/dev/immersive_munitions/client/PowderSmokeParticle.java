@@ -27,14 +27,14 @@ public class PowderSmokeParticle extends TextureSheetParticle {
         xd = vx;
         yd = vy;
         zd = vz;
-        friction = 0.7f;
+        friction = 0.8f;
         gravity = 0;
         hasPhysics = false;
-        lifetime = 5 + random.nextInt(3);
-        quadSize = 0.022f + random.nextFloat() * 0.012f;
-        float shade = 0.55f + random.nextFloat() * 0.15f;
+        lifetime = 10 + random.nextInt(5);
+        quadSize = 0.05f + random.nextFloat() * 0.03f;
+        float shade = 0.72f + random.nextFloat() * 0.15f;
         setColor(shade, shade, shade * 0.95f);
-        alpha = 0.6f;
+        alpha = 0.85f;
         setSpriteFromAge(sprites);
     }
 
@@ -42,7 +42,7 @@ public class PowderSmokeParticle extends TextureSheetParticle {
     public void tick() {
         super.tick();
         setSpriteFromAge(sprites);
-        alpha = 0.6f * (1 - age / (float) lifetime);
+        alpha = 0.85f * (1 - age / (float) lifetime);
     }
 
     @Override

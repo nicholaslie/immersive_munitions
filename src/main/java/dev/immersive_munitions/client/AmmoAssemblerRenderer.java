@@ -60,9 +60,9 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             PRESS = part("press"), LAMP = part("lamp");
     // The lamp's lit art is the next tile right on the machine's 128px sheet of 16px tiles
     private static final float LAMP_TILE_SHIFT = 16 / 128f;
-    // Front screens (model.py front_screens): 0.64 x 0.46, centred at x = -0.5 and 0.5, y = 1.63, face at z = 1.99.
+    // Front screens (model.py front_screens): 0.64 x 0.46, centred at x = -0.5 and 0.5, y = 1.63, face at z = 2.015.
     // The icon sits left of centre and the count right; text is about 0.1 tall, in display green (EMPTY in red)
-    private static final float SCREEN_POWDER_X = -0.5f, SCREEN_FEEDER_X = 0.5f, SCREEN_Y = 1.63f, SCREEN_Z = 1.99f;
+    private static final float SCREEN_POWDER_X = -0.5f, SCREEN_FEEDER_X = 0.5f, SCREEN_Y = 1.63f, SCREEN_Z = 2.015f;
     private static final float SCREEN_ICON_DX = -0.12f, SCREEN_ICON_SIZE = 0.2f, SCREEN_COUNT_DX = 0.1f;
     private static final float SCREEN_TEXT_SCALE = 0.012f;
     private static final int SCREEN_TEXT = 0xFF5CFF7A, SCREEN_EMPTY = 0xFFFF4A3A;

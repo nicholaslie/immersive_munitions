@@ -100,21 +100,21 @@ def strip(x, y0, y1, z0, z1, color, name="strip"):
 # ---------- body ----------
 def body():
     group("body")
-    box(-0.99, 1.99, -1, -0.16, 0.01, 1.99, "body", "plinth")   # top stops under the wood band
+    box(-1, 2, -1, -0.16, 0, 2.0, "body", "plinth")   # flush with the wood band above it
     box(-1, 2, -0.16, 0.0, 0.0, 2.0, "trim", "base_trim")         # treated-wood band around the top of the base
     box(-1, 2, 0, 0.125, 1.06, 1.94, "belt", "belt")
     box(-1, 2, 0, 0.19, 1.0, 1.06, "trim", "belt_rail_back")
     box(-1, 2, 0, 0.19, 1.94, 2.0, "trim", "belt_rail_front")
-    box(0.25, 0.75, -0.75, -0.25, 1.99, 2.0, "red", "rs_lamp")
-    box(-0.99, 1.99, 1.30, 1.94, 0.01, 1.975, "body", "roof")
+    box(0.25, 0.75, -0.75, -0.25, 2.0, 2.01, "red", "rs_lamp")
+    box(-1, 2, 1.38, 1.94, 0, 2.0, "body", "roof")      # flush with the wood band under it and the cap over it
     box(-1, 2, 1.94, 1.997, 0, 2.0, "trim", "roof_cap")
     box(-1, 2, 1.22, 1.38, 0, 2.0, "accent", "upper_trim")        # wood band all the way round, under the screens
     box(-0.92, 1.92, 1.21, 1.22, 0.92, 1.94, "trim", "ceiling")    # metal tunnel ceiling the station mounts hang from
     for x in (0.0, 1.0):
         box(x - 0.03, x + 0.03, 1.05, 1.30, 0.93, 1.92, "trim", "station_rib")
-    for cx in (-0.5, 0.5):   # roof item ports: a 1px raised lip, 1px wider than the port, with the port on top
-        box(cx - 0.3125, cx + 0.3125, 1.997, 2.0595, 0.1875, 0.8125, "mech", "port_lip")
-        box(cx - 0.25, cx + 0.25, 2.0595, 2.0625, 0.25, 0.75, "dark", "intake", occluder=False)
+    for cx in (-0.5, 0.5):   # roof item ports over the screens: a 1px raised lip, 1px wider than the port, with the port on top
+        box(cx - 0.3125, cx + 0.3125, 1.997, 2.0595, 1.1875, 1.8125, "mech", "port_lip")
+        box(cx - 0.25, cx + 0.25, 2.0595, 2.0625, 1.25, 1.75, "dark", "intake", occluder=False)
     for x0 in (-1.0, 1.92):
         box(x0, x0 + 0.08, 0.19, 1.22, 0.92, 1.0, "body", "portal_post")
         box(x0, x0 + 0.08, 0.19, 1.22, 1.94, 2.0, "body", "portal_post")
@@ -134,9 +134,9 @@ def front_screens():
     """Screens and dial are shallow recesses; bezel art, icons and counts come from the texture and the renderer."""
     group("front_screens")
     for cx in (-0.5, 0.5):
-        box(cx - 0.32, cx + 0.32, 1.40, 1.86, 1.975, 1.99, "screen", "screen")
-    box(1.30, 1.70, 1.44, 1.84, 1.975, 1.985, "trim", "lamp_plate")      # status lamp: lit while working
-    disc(1.5, 1.64, 0.13, 1.985, 1.994, "lamp", "power_lamp")
+        box(cx - 0.32, cx + 0.32, 1.40, 1.86, 2.0, 2.015, "screen", "screen")
+    box(1.30, 1.70, 1.44, 1.84, 2.0, 2.01, "trim", "lamp_plate")      # status lamp: lit while working
+    disc(1.5, 1.64, 0.13, 2.01, 2.019, "lamp", "power_lamp")
 
 
 # ---------- stations ----------
@@ -180,12 +180,15 @@ def back_hydraulics():
     box(1, 2, 0, 1.22, 0.40, 0.92, "body", "recessed_wall")
     box(1.0, 2.0, 0, 0.06, 0, 0.40, "trim", "unit_floor")
     cyl(1.30, 0.20, 0.17, 0.06, 0.62, "hydro", name="pump_motor")
-    box(1.55, 1.92, 0.06, 0.82, 0.03, 0.38, "body", "reservoir")
+    box(1.55, 1.92, 0.06, 0.76, 0.03, 0.38, "body", "reservoir")
+    box(1.55, 1.92, 0.76, 0.82, 0.03, 0.38, "body", "reservoir_lid")
     box(1.70, 1.76, 0.18, 0.72, 0.02, 0.03, "glass", "level_gauge")
     for x in (1.30, 1.45):
         box(x - 0.03, x + 0.03, 0.62, 1.30, 0.17, 0.23, "mech", "pressure_line")
     box(1.26, 1.49, 0.90, 1.02, 0.12, 0.28, "brass", "valve_block")   # a bit wider than the lines through it
-    box(1.25, 1.75, -0.68, -0.18, 0.0, 0.01, "accent", "power_plate")
+    # power input on the roof over the press bay, back row: IE's port tile facing up for a wire connector, on a 1px lip like the intakes
+    box(1.0, 2.0, 1.997, 2.0595, 0.0, 1.0, "mech", "power_lip")
+    box(1.0, 2.0, 2.0595, 2.0625, 0.0, 1.0, "accent", "power_port", occluder=False)
 
 
 # ---------- cleanup ----------
@@ -222,11 +225,22 @@ CHAMFERED = ("roof_cap", "plinth")
 
 
 def chamfer_outline():
+    """Chamfer only the machine's outer outline: the roof cap's top edges and the plinth's bottom edges. The cap and
+    plinth are flush with the walls they sit on, so every other edge stays square, or the chamfer shows as a gap."""
     for name in CHAMFERED:
         for ob in bpy.data.objects:
             if ob.name.split(".")[0] == name:
+                bm = bmesh.new()
+                bm.from_mesh(ob.data)
+                weight = bm.edges.layers.float.get("bevel_weight_edge") or bm.edges.layers.float.new("bevel_weight_edge")
+                zs = [v.co.z for v in bm.verts]          # Blender z is up
+                outer = max(zs) if name == "roof_cap" else min(zs)   # the roof's top, the base's bottom
+                for e in bm.edges:
+                    e[weight] = 1.0 if all(abs(v.co.z - outer) < 1e-4 for v in e.verts) else 0.0
+                bm.to_mesh(ob.data)
+                bm.free()
                 mod = ob.modifiers.new("chamfer", 'BEVEL')
-                mod.width, mod.segments, mod.limit_method = 0.03, 1, 'ANGLE'
+                mod.width, mod.segments, mod.limit_method = 0.03, 1, 'WEIGHT'
 
 
 def count():

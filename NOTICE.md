@@ -24,7 +24,7 @@ Licensed under [Blu's License of Common Sense](https://github.com/BluSunrize/Imm
 
 - Brass and zinc dust, brass plate, brass rod and brass wire are recolored from IE's metal dust, plate, stick and wire textures (made by `tools/gen_resources.py`).
 - The 64x64 mold sprites are original art drawn to match IE's molds.
-- The Ammunition Assembler's model is original, but parts of it use IE's own block textures (sheetmetal, conveyor, steel grate, treated wood and the multiblock port tiles), referenced by name from IE at runtime. Its machine-specific details use our own sheet (`textures/block/multiblocks/ammo_assembler.png`), which also holds one tile recolored from IE's steel sheet metal (brightened, made by `art/assembler/AssemblerSheet.java`).
+- The Ammunition Assembler's model is original, but parts of it use IE's own block textures (sheetmetal, conveyor, steel grate, treated wood, the multiblock port tiles, and the metal barrel, fluid pump and fluid pipe on its hydraulic unit), referenced by name from IE at runtime. Its machine-specific details use our own sheet (`textures/block/multiblocks/ammo_assembler.png`), which also holds one tile recolored from IE's steel sheet metal (brightened, made by `art/assembler/AssemblerSheet.java`).
 - The mod uses IE's API and machines. No IE code is included.
 
 Source: https://github.com/BluSunrize/ImmersiveEngineering

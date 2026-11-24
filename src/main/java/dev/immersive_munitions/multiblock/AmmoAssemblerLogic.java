@@ -59,11 +59,11 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     private static final BlockPos BELT_START = new BlockPos(0, 1, 1);
     private static final CapabilityPosition CASING_INPUT = new CapabilityPosition(0, 1, 1, RelativeBlockFace.RIGHT);
     private static final MultiblockFace OUTPUT = new MultiblockFace(3, 1, 1, RelativeBlockFace.RIGHT);
-    // Roof intakes over the back row (gunpowder over the first bay, projectiles over the middle bay),
-    // power plate on the back of the press bay
-    private static final CapabilityPosition GUNPOWDER_INPUT = new CapabilityPosition(0, 2, 0, RelativeBlockFace.UP);
-    private static final CapabilityPosition PROJECTILE_INPUT = new CapabilityPosition(1, 2, 0, RelativeBlockFace.UP);
-    private static final CapabilityPosition ENERGY_INPUT = new CapabilityPosition(2, 0, 0, RelativeBlockFace.FRONT);
+    // Roof intakes over the belt row, right above their screens (gunpowder over the first bay, projectiles over the middle bay),
+    // and IE's power port on the roof over the press bay, back row, facing up for a wire connector (as IE does it)
+    private static final CapabilityPosition GUNPOWDER_INPUT = new CapabilityPosition(0, 2, 1, RelativeBlockFace.UP);
+    private static final CapabilityPosition PROJECTILE_INPUT = new CapabilityPosition(1, 2, 1, RelativeBlockFace.UP);
+    private static final CapabilityPosition ENERGY_INPUT = new CapabilityPosition(2, 2, 0, RelativeBlockFace.UP);
 
     // How far along the belt (0..1) each station sits: one per block, centred on it
     public static final float FILL_POINT = 1 / 6f;
@@ -78,7 +78,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     // Bottom of the powder head's drop tube at the bottom of its stroke. Its stream of powder: how many grains, how
     // far below the tube they reach (about to the casing's mouth); the belt carries a casing 3 blocks per cycle
     private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
-    private static final int STREAM_GRAINS = 30, SMOKE_WISPS = 3;
+    private static final int STREAM_GRAINS = 30, SMOKE_WISPS = 6;
     private static final double STREAM_LENGTH = 0.12, BELT_BLOCKS = 3;
 
     @Override
@@ -137,11 +137,14 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             level.addParticle(ModParticles.GUNPOWDER.get(), tube.x + jx, tube.y - drop, tube.z + jz,
                     belt.x, -0.05 - random.nextDouble() * 0.02, belt.z);
         }
-        // and a small poof of smoke out of the tube's mouth
+        // and a small poof of smoke: half out of the tube's mouth, puffing down, half kicked up out of the casing's
+        // mouth as the powder lands, both spreading sideways and riding along with the casing
         for (int i = 0; i < SMOKE_WISPS; i++) {
-            double vx = (random.nextDouble() - 0.5) * 0.015, vz = (random.nextDouble() - 0.5) * 0.015;
-            level.addParticle(ModParticles.POWDER_SMOKE.get(), tube.x, tube.y, tube.z,
-                    vx, -0.02 - random.nextDouble() * 0.015, vz);
+            boolean fromCasing = i % 2 == 1;
+            double vx = belt.x + (random.nextDouble() - 0.5) * 0.03, vz = belt.z + (random.nextDouble() - 0.5) * 0.03;
+            double vy = fromCasing ? 0.008 + random.nextDouble() * 0.01 : -0.02 - random.nextDouble() * 0.015;
+            level.addParticle(ModParticles.POWDER_SMOKE.get(), tube.x, tube.y - (fromCasing ? STREAM_LENGTH : 0), tube.z,
+                    vx, vy, vz);
         }
     }
 
