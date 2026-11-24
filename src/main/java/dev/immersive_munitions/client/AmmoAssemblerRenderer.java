@@ -154,7 +154,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             drawItem(projectile, FEEDER_X, FEEDER_BOTTOM - FEED_STROKE * feed, FEEDER_SCALE, pose, buffers, level,
                     light, packedOverlay);
         drawPart(PRESS, 0, -PRESS_STROKE * press, pose, buffers, rotation, light, packedOverlay);
-        if (state.isActive()) drawLitLamp(pose, buffers, packedOverlay);
+        if (state.isPowered()) drawLitLamp(pose, buffers, packedOverlay);
         else drawPart(LAMP, 0, 0, pose, buffers, rotation, light, packedOverlay);
 
         // Front screens: what each roof hopper holds, gunpowder over the powder station, projectiles over the feeder
@@ -190,7 +190,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             if (casing.inputItems.isEmpty()) continue;
             ItemStack shell = casing.inputItems.get(0);
             drawItem(shell, x, BELT_TOP, ITEM_SCALE, pose, buffers, level, light, packedOverlay);
-            if (p < AmmoAssemblerLogic.PLACE_POINT || recipe == null) continue;
+            if (p < AmmoAssemblerLogic.PLACE_POINT || recipe == null || recipe.hideProjectile) continue;
             ItemStack[] projectiles = recipe.projectile.getMatchingStacks();
             if (projectiles.length == 0) continue;
             TextureAtlasSprite shellSprite = spriteOf(shell, level);
@@ -240,7 +240,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         pose.popPose();
     }
 
-    // The lamp, lit while the machine works: its quads moved onto the lit tile, at full brightness and unshaded, so it glows
+    // The power lamp, lit while the machine has energy: its quads moved onto the lit tile, at full brightness and unshaded, so it glows
     private static void drawLitLamp(PoseStack pose, MultiBufferSource buffers, int overlay) {
         BakedModel model = Minecraft.getInstance().getModelManager().getModel(LAMP);
         VertexConsumer out = buffers.getBuffer(RenderType.solid());

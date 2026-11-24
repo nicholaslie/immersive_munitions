@@ -14,8 +14,7 @@ import javax.imageio.ImageIO;
  *   0,2 IE steel sheet metal, brightened to the light panel grey (tiles like the roof)
  *   1,2 turned steel   2,2 chrome   3,2 red handwheel   4,2 gunmetal housing
  *   2,3 knurled jaw
- *   0,3 status lamp off   1,3 status lamp on (lit while working)
- *   7,1 oil sight glass (hydraulic unit level gauge)
+ *   0,3 power lamp off   1,3 power lamp on (lit while the machine has energy)
  *   4..7,0 conveyor rail strip (left end, middle, right end, both ends)
  *   0..3,4..7  panel set, light      4..7,4..7  panel set, dark
  *     A panel set is 4x4 cells: a 3x3 nine-slice (corners, edges, middle), plus a column for panels one block
@@ -44,7 +43,6 @@ public class AssemblerSheet {
         handwheel(48, 32, 0x6e1610, 0xa82a1c, 0xd8503a);         // red paint
         housing(64, 32, 0x34363b, 0x26272b, 0x45484e, 0x6c6f75);  // dark gunmetal
         knurled(32, 48);
-        oilGlass(112, 16);   // hydraulic unit level gauge
 
         File out = new File(args.length > 0 ? args[0]
                 : "src/main/resources/assets/immersive_munitions/textures/block/multiblocks/ammo_assembler.png");
@@ -216,17 +214,6 @@ public class AssemblerSheet {
             px(ox + x, oy + y, c);
         }
         px(ox + 6, oy + 6, on ? 0xffd0c0 : 0x7a2a22);
-    }
-
-    // oil level sight glass: amber hydraulic oil up to three quarters, a bright meniscus, a highlight streak
-    static void oilGlass(int ox, int oy) {
-        fill(ox, oy, 16, 16, 0x9fc3cc);
-        fill(ox, oy + 4, 16, 12, 0xa8620e);
-        fill(ox, oy + 4, 16, 1, 0xe0a040);
-        fill(ox, oy + 13, 16, 3, 0x7e4808);
-        fill(ox, oy, 1, 16, 0x5a4a3a);
-        fill(ox + 15, oy, 1, 16, 0x5a4a3a);
-        fill(ox + 3, oy, 1, 16, 0xf0e0c0);
     }
 
     static int shade(int rgb, int d) {

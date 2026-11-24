@@ -13,7 +13,7 @@ Texture modes:
   tile_r  tile, turned 90 degrees (vertical stripes run horizontally)
   belt    IE conveyor, running along the belt
   whole   texture (or one sheet tile) stretched over the part; whole_r turns it 90 degrees
-  rect    one tile of an IE sheet stretched over the part (ports), optionally another tile on top and bottom
+  rect    one tile of an IE sheet stretched over the part (ports)
   panel9  our long sheet-metal panels: one panel per wall, seams and corner rivets only at its edges
   rail    our conveyor rail strip: one rivet at each end
 """
@@ -36,10 +36,9 @@ def sheet(col, row):
     return ("sheet", (col, row), "whole")
 
 
-def rect(path, x0, y0, w, h, size=128, top=None):
-    """One tile of an IE sheet stretched over the whole part (ports and the like). With top=(x0, y0, w, h), the top and
-    bottom faces take that tile instead (a motor's end, say)."""
-    return ("ie", path, ("rect", x0, y0, w, h, size, top))
+def rect(path, x0, y0, w, h, size=128):
+    """One tile of an IE sheet stretched over the whole part (ports and the like)."""
+    return ("ie", path, ("rect", x0, y0, w, h, size))
 
 
 RS_PORT = rect("multiblocks/multiblock_components", 96, 48, 16, 16)     # IE redstone control port
@@ -69,7 +68,7 @@ BY_NAME = {
     "lamp_plate": ie("metal/sheetmetal_steel", "whole_r"),   # turned to match the roof under it
     "port_lip": ie("metal/sheetmetal_steel"),   # raised lip under the roof ports, same steel as the roof
     "rs_lamp": RS_PORT, "power_port": POWER_PORT, "power_lip": ie("metal/sheetmetal_steel"), "intake": ITEM_PORT,
-    "sight_glass": sheet(3, 1), "feed_tube": sheet(2, 0), "level_gauge": sheet(2, 0),
+    "sight_glass": sheet(3, 1), "feed_tube": sheet(2, 0),
 }
 
 # station heads: machined look (turned steel, chrome, gunmetal housings, red handwheel)
@@ -81,19 +80,13 @@ DYNAMIC = {
     "wheel": ("metering_wheel",),
     "jaws": ("jaw_left", "jaw_right"),
     "press": ("crosshead", "ram", "seating_die", "lock_ring"),
-    # not moving, but switched: the renderer moves it onto the lit lamp tile (one tile right) while working
+    # not moving, but switched: the renderer moves it onto the lit lamp tile (one tile right) while the machine has energy
     "lamp": ("power_lamp",),
 }
 BY_NAME.update({
     "metering_valve": HOUSING, "escapement": HOUSING, "metering_wheel": sheet(3, 2),
     "pawl_lever": TURNED, "funnel_cone": TURNED, "drop_tube": TURNED, "seating_die": TURNED,
     "jaw_left": KNURL, "jaw_right": KNURL, "ram": CHROME, "guide_rod": CHROME,
-    # hydraulic power unit behind the press: IE's fluid pump, barrel and pipe textures, plus our oil sight glass
-    "reservoir": ie("metal_device/barrel_side", "whole"),     # IE metal barrel, with its lid on top
-    "reservoir_lid": rect("metal_device/barrel_up_none", 0, 0, 16, 2, 16, top=(0, 0, 16, 16)),
-    "pump_motor": rect("metal_device/fluid_pump_top", 3, 10, 10, 13, 32, top=(3, 0, 10, 10)),   # IE fluid pump body
-    "pressure_line": rect("metal_device/fluid_pipe", 16, 0, 8, 16, 32),                          # IE fluid pipe
-    "valve_block": rect("metal_device/fluid_pipe", 2, 2, 12, 12, 32), "level_gauge": sheet(7, 1),   # pipe flange; oil glass
 })
 
 
@@ -284,9 +277,7 @@ for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
                 col, row = key
                 out = [((col + u) / 8, 1 - (row + 1 - v) / 8) for u, v in out]
             elif isinstance(mode, tuple) and mode[0] == "rect":
-                _, x0, y0, w, h, size, top = mode
-                if top and ax == 1:
-                    x0, y0, w, h = top
+                _, x0, y0, w, h, size = mode
                 out = [((x0 + u * w) / size, 1 - (y0 + (1 - v) * h) / size) for u, v in out]
             elif mode == "whole_r":
                 out = [(v, 1 - u) for u, v in out]
@@ -371,9 +362,7 @@ for name, center, scale, d in (("tex_front_left", (0.5, 0.5, 1.0), 5.0, (-0.55, 
                                ("tex_end_output", (0.5, 0.5, 1.0), 3.4, (1, 0, 0.12)),
                                ("tex_roof_ports", (0.0, 2.0, 1.5), 2.2, (0.35, -1, 1.1)),
                                ("tex_end_output_zoom", (2.0, 0.65, 0.66), 1.3, (1, 0, 0.05)),
-                               ("tex_power_input", (1.5, 2.0, 0.5), 2.4, (0.45, 1, 0.9)),
-                               ("tex_back_unit", (1.5, 0.75, 0.2), 2.0, (0.55, 1, 0.3)),
-                               ("tex_back_unit_side", (1.5, 0.75, 0.2), 2.0, (-0.35, 1, 0.2))):
+                               ("tex_power_input", (1.5, 2.0, 0.5), 2.4, (0.45, 1, 0.9))):
     ctr = Vector((center[0], -center[2], center[1]))
     cam.data.ortho_scale = scale
     cam.location = ctr + Vector(d).normalized() * 20

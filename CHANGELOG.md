@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.0.4-alpha (2026-11-24)
+
+The Ammunition Assembler gets its finished model and animations.
+
+- New IE-style model (built in Blender, `art/assembler/`): steel panels with treated-wood bands, IE ports, machined station heads, and a plain back.
+- The belt runs smoothly on the client between syncs, and casings no longer jump back or flicker (ghosting).
+- Animated stations:
+  - The gunpowder head drops and pours a quick stream of grains with a small puff of smoke into each casing.
+  - The feeder's claws hold the projectile from its hopper and seat it on the casing.
+  - The press comes down and the finished round appears after it.
+- 12g shells show no projectile on the casing between the feeder and the press. Any recipe can do this with `"hide_projectile": true`.
+- Two front screens show what each hopper holds: the item and its count, or EMPTY.
+- The red power lamp on the front is lit while the machine has energy stored.
+- Hopper intakes moved to the front of the roof, right above their screens.
+- Power now goes in through IE's power port on top of the roof, at the back over the press, like IE's machines. Stand a wire connector on it. Machines built in 0.0.3 need their hoppers and power connector moved.
+- Faster belt that keeps up with a hopper: 60-tick recipes, up to 8 casings at once, 1200 FE per round.
+- Caliber labels on casings, projectiles and molds now show only in inventories. In the world and on the belt they are plain.
+
 ## 0.0.3-alpha (2026-11-23)
 
 - New multiblock: the **Ammunition Assembler** (3 long, 3 tall, 2 deep). Casings ride a belt, get filled with gunpowder under the hopper, then a projectile is pressed in under the piston, and the finished TaCZ round comes out the far end. Runs on IE power, with a redstone off switch. One recipe per caliber (`data/immersive_munitions/recipes/ammo_assembly/`). The model and belt animation are still placeholders.

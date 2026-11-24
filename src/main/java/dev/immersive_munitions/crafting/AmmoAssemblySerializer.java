@@ -17,7 +17,8 @@ import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
  *   "projectile": {"item": "immersive_munitions:projectile_9mm"},
  *   "gunpowder": {"tag": "forge:gunpowder"},
  *   "result": {"ammo": "9mm", "count": 1},
- *   "time": 60, "energy": 1200        (optional)
+ *   "time": 60, "energy": 1200,       (optional)
+ *   "hide_projectile": true           (optional: no projectile drawn on the casing after the feeder, e.g. 12g)
  * }
  */
 public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecipe> {
@@ -39,7 +40,8 @@ public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecip
                 GsonHelper.getAsString(result, "ammo"),
                 GsonHelper.getAsInt(result, "count", 1),
                 GsonHelper.getAsInt(json, "time", DEFAULT_TIME),
-                GsonHelper.getAsInt(json, "energy", DEFAULT_ENERGY));
+                GsonHelper.getAsInt(json, "energy", DEFAULT_ENERGY),
+                GsonHelper.getAsBoolean(json, "hide_projectile", false));
     }
 
     @Override
@@ -51,7 +53,8 @@ public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecip
                 buf.readUtf(),
                 buf.readVarInt(),
                 buf.readVarInt(),
-                buf.readVarInt());
+                buf.readVarInt(),
+                buf.readBoolean());
     }
 
     @Override
@@ -63,5 +66,6 @@ public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecip
         buf.writeVarInt(recipe.count);
         buf.writeVarInt(recipe.getTotalProcessTime());
         buf.writeVarInt(recipe.getTotalProcessEnergy());
+        buf.writeBoolean(recipe.hideProjectile);
     }
 }

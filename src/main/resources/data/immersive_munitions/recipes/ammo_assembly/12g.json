@@ -3,5 +3,6 @@
   "casing": {"item": "immersive_munitions:empty_casing_12g"},
   "projectile": {"item": "immersive_munitions:projectile_12g"},
   "gunpowder": {"tag": "forge:gunpowder"},
-  "result": {"ammo": "12g", "count": 1}
+  "result": {"ammo": "12g", "count": 1},
+  "hide_projectile": true
 }

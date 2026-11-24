@@ -12,6 +12,7 @@ from mathutils import Vector, Matrix
 
 blend_out, out_dir = sys.argv[sys.argv.index("--") + 1:][:2]
 SIDES = 8
+CHAMFER = 0.03   # width of the bevel round the roof and base outline
 
 PALETTE = {
     "body": (0.30, 0.31, 0.34), "panel": (0.40, 0.41, 0.45), "trim": (0.22, 0.23, 0.25),
@@ -135,7 +136,7 @@ def front_screens():
     group("front_screens")
     for cx in (-0.5, 0.5):
         box(cx - 0.32, cx + 0.32, 1.40, 1.86, 2.0, 2.015, "screen", "screen")
-    box(1.30, 1.70, 1.44, 1.84, 2.0, 2.01, "trim", "lamp_plate")      # status lamp: lit while working
+    box(1.30, 1.70, 1.44, 1.84, 2.0, 2.01, "trim", "lamp_plate")      # power lamp: lit while the machine has energy
     disc(1.5, 1.64, 0.13, 2.01, 2.019, "lamp", "power_lamp")
 
 
@@ -174,21 +175,13 @@ def press_head():
     cyl(1.5, 1.5, 0.11, 0.60, 0.66, "brass", name="lock_ring")
 
 
-def back_hydraulics():
-    group("back_hydraulics")
-    box(-1, 1, 0, 1.22, 0.01, 0.92, "body", "back_wall")       # stops under the wood band, so their ends never share a plane
-    box(1, 2, 0, 1.22, 0.40, 0.92, "body", "recessed_wall")
-    box(1.0, 2.0, 0, 0.06, 0, 0.40, "trim", "unit_floor")
-    cyl(1.30, 0.20, 0.17, 0.06, 0.62, "hydro", name="pump_motor")
-    box(1.55, 1.92, 0.06, 0.76, 0.03, 0.38, "body", "reservoir")
-    box(1.55, 1.92, 0.76, 0.82, 0.03, 0.38, "body", "reservoir_lid")
-    box(1.70, 1.76, 0.18, 0.72, 0.02, 0.03, "glass", "level_gauge")
-    for x in (1.30, 1.45):
-        box(x - 0.03, x + 0.03, 0.62, 1.30, 0.17, 0.23, "mech", "pressure_line")
-    box(1.26, 1.49, 0.90, 1.02, 0.12, 0.28, "brass", "valve_block")   # a bit wider than the lines through it
+def back_wall():
+    group("back_wall")
+    box(-1, 2, 0, 1.22, 0.01, 0.92, "body", "back_wall")       # stops under the wood band, so their ends never share a plane
     # power input on the roof over the press bay, back row: IE's port tile facing up for a wire connector, on a 1px lip like the intakes
-    box(1.0, 2.0, 1.997, 2.0595, 0.0, 1.0, "mech", "power_lip")
-    box(1.0, 2.0, 2.0595, 2.0625, 0.0, 1.0, "accent", "power_port", occluder=False)
+    # (kept off the roof's chamfered outer edges, CHAMFER wide, so nothing hangs over the bevel)
+    box(1.0, 2.0 - CHAMFER, 1.997, 2.0595, CHAMFER, 1.0, "mech", "power_lip")
+    box(1.0, 2.0 - CHAMFER, 2.0595, 2.0625, CHAMFER, 1.0, "accent", "power_port", occluder=False)
 
 
 # ---------- cleanup ----------
@@ -240,7 +233,7 @@ def chamfer_outline():
                 bm.to_mesh(ob.data)
                 bm.free()
                 mod = ob.modifiers.new("chamfer", 'BEVEL')
-                mod.width, mod.segments, mod.limit_method = 0.03, 1, 'WEIGHT'
+                mod.width, mod.segments, mod.limit_method = CHAMFER, 1, 'WEIGHT'
 
 
 def count():
@@ -262,7 +255,7 @@ def shoot(scene, cam, center, scale, d, name):
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-body(); flaps(); front_screens(); powder_head(); projectile_head(); press_head(); back_hydraulics()
+body(); flaps(); front_screens(); powder_head(); projectile_head(); press_head(); back_wall()
 culled = cull_hidden_faces()
 chamfer_outline()
 per = count()

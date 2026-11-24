@@ -26,11 +26,15 @@ public class AmmoAssemblyRecipe extends MultiblockRecipe {
     public final IngredientWithSize gunpowder;
     public final String ammoId;
     public final int count;
+    // Leave the projectile off the casing on the belt between the feeder and the press (shot shells, whose wad and
+    // shot go inside the hull, look wrong with the projectile sprite sitting on top)
+    public final boolean hideProjectile;
     private final int time;
     private final int energy;
 
     public AmmoAssemblyRecipe(ResourceLocation id, IngredientWithSize casing, IngredientWithSize projectile,
-                              IngredientWithSize gunpowder, String ammoId, int count, int time, int energy) {
+                              IngredientWithSize gunpowder, String ammoId, int count, int time, int energy,
+                              boolean hideProjectile) {
         super(Lazy.of(() -> TaczAmmoStacks.create(ammoId, count)), ModRecipes.AMMO_ASSEMBLY, id);
         this.casing = casing;
         this.projectile = projectile;
@@ -39,6 +43,7 @@ public class AmmoAssemblyRecipe extends MultiblockRecipe {
         this.count = count;
         this.time = time;
         this.energy = energy;
+        this.hideProjectile = hideProjectile;
 
         setInputListWithSizes(List.of(casing, projectile, gunpowder));
         outputList = Lazy.of(() -> NonNullList.of(ItemStack.EMPTY, TaczAmmoStacks.create(ammoId, count)));

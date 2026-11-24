@@ -75,6 +75,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     // Enough room on the belt for a full cycle's worth of casings at that spacing
     private static final int MAX_CASINGS = 8;
     private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
+    public static final int ENERGY_CAPACITY = 16000;
     // Bottom of the powder head's drop tube at the bottom of its stroke. Its stream of powder: how many grains, how
     // far below the tube they reach (about to the casing's mouth); the belt carries a casing 3 blocks per cycle
     private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
@@ -90,6 +91,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     public void tickServer(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
         boolean active = state.processor.tickServer(state, ctx.getLevel(), state.rsState.isEnabled(ctx));
+        boolean powered = state.energy.getEnergyStored() > 0;
         ItemStack powder = state.gunpowder.getStackInSlot(0), projectile = state.projectiles.getStackInSlot(0);
         state.ticksSinceSync++;
         // The client runs the belt itself (tickClient); resync when what it relies on changes, and now and then
@@ -97,12 +99,13 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         // in count alone waits a few ticks (a hopper and the belt each change them every 8 ticks or so)
         boolean counts = powder.getCount() != state.shownGunpowder.getCount()
                 || projectile.getCount() != state.shownProjectiles.getCount();
-        boolean resync = active != state.active
+        boolean resync = active != state.active || powered != state.powered
                 || !ItemStack.isSameItemSameTags(powder, state.shownGunpowder)
                 || !ItemStack.isSameItemSameTags(projectile, state.shownProjectiles)
                 || (counts && state.ticksSinceSync >= COUNT_SYNC_TICKS)
                 || (active && state.ticksSinceSync >= RESYNC_TICKS);
         state.active = active;
+        state.powered = powered;
         if (resync) {
             state.shownGunpowder = powder.copy();
             state.shownProjectiles = projectile.copy();
@@ -162,6 +165,30 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
     }
 
+    /** The gunpowder hopper: one slot, gunpowder only. */
+    static ItemStackHandler gunpowderSlot(Runnable markDirty) {
+        return slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
+    }
+
+    /** The projectile hopper: one slot, projectiles only. */
+    static ItemStackHandler projectileSlot(Runnable markDirty) {
+        return slot(markDirty, stack -> stack.is(ModTags.PROJECTILES));
+    }
+
+    private static ItemStackHandler slot(Runnable markDirty, Predicate<ItemStack> valid) {
+        return new ItemStackHandler(1) {
+            @Override
+            public boolean isItemValid(int slot, ItemStack stack) {
+                return valid.test(stack);
+            }
+
+            @Override
+            protected void onContentsChanged(int slot) {
+                markDirty.run();
+            }
+        };
+    }
+
     @Override
     public <T> LazyOptional<T> getCapability(IMultiblockContext<State> ctx, CapabilityPosition position, Capability<T> cap) {
         State state = ctx.getState();
@@ -194,11 +221,13 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         final ItemStackHandler gunpowder;
         final ItemStackHandler projectiles;
         final IItemHandler casingInput;
-        private final AveragingEnergyStorage energy = new AveragingEnergyStorage(16000);
+        private final AveragingEnergyStorage energy = new AveragingEnergyStorage(ENERGY_CAPACITY);
         private final DroppingMultiblockOutput output;
-        // Synced: whether the machine is working (runs the client's belt, and lights the lamp on the roof, which
-        // glows while working like the active textures of IE / IG / IT / IP machines)
+        // Synced: whether the machine is working (runs the client's belt)
         private boolean active;
+        // Synced: whether it has any energy stored, which lights the power lamp on the front (it keeps working off
+        // its buffer, so the lamp stays lit until that runs dry)
+        private boolean powered;
         // Synced copies of what's in the two hoppers, as of the last sync: the client runs the belt by them, the
         // feeder's jaws hold one of the projectiles, and the front screens show the counts
         ItemStack shownGunpowder = ItemStack.EMPTY, shownProjectiles = ItemStack.EMPTY;
@@ -215,28 +244,14 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             Runnable markDirty = ctx.getMarkDirtyRunnable();
             processor = new MultiblockProcessor<>(MAX_CASINGS, maxTicks -> MIN_SPACING, MAX_CASINGS, markDirty, ctx.getSyncRunnable(),
                     AmmoAssemblyRecipe.RECIPES::getById);
-            gunpowder = slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
-            projectiles = slot(markDirty, stack -> stack.is(ModTags.PROJECTILES));
+            gunpowder = gunpowderSlot(markDirty);
+            projectiles = projectileSlot(markDirty);
             casingInput = new CasingInput(ctx.levelSupplier(), this);
             output = new DroppingMultiblockOutput(OUTPUT, ctx);
 
             casingCap = new StoredCapability<>(casingInput);
             gunpowderCap = new StoredCapability<>(gunpowder);
             projectileCap = new StoredCapability<>(projectiles);
-        }
-
-        private static ItemStackHandler slot(Runnable markDirty, Predicate<ItemStack> valid) {
-            return new ItemStackHandler(1) {
-                @Override
-                public boolean isItemValid(int slot, ItemStack stack) {
-                    return valid.test(stack);
-                }
-
-                @Override
-                protected void onContentsChanged(int slot) {
-                    markDirty.run();
-                }
-            };
         }
 
         /** Takes the gunpowder (or projectile) for a recipe out of its hopper. Returns false if there isn't enough. */
@@ -266,6 +281,10 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         @Override
         public void doProcessOutput(ItemStack result, IMultiblockLevel level) {
             output.insertOrDrop(result, level);
+        }
+
+        public boolean isPowered() {
+            return powered;
         }
 
         public boolean isActive() {
@@ -314,6 +333,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public void writeSyncNBT(CompoundTag nbt) {
             nbt.put("processor", processor.toNBT());
             nbt.putBoolean("active", active);
+            nbt.putBoolean("powered", powered);
             if (!shownGunpowder.isEmpty()) nbt.put("gunpowder", shownGunpowder.save(new CompoundTag()));
             if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(new CompoundTag()));
         }
@@ -329,6 +349,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
                 if (process instanceof AssemblyProcess casing && running.containsKey(casing.id()))
                     casing.keepClientProgress(running.get(casing.id()));
             active = nbt.getBoolean("active");
+            powered = nbt.getBoolean("powered");
             shownGunpowder = nbt.contains("gunpowder") ? ItemStack.of(nbt.getCompound("gunpowder")) : ItemStack.EMPTY;
             shownProjectiles = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
         }
