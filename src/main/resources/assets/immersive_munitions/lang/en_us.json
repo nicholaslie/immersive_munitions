@@ -105,5 +105,13 @@
   "item.immersive_munitions.tab_icon_mold": "Creative Tab Icon — Mold",
   "item.immersive_munitions.tab_icon_projectile": "Creative Tab Icon — Projectile",
   "item.immersive_munitions.tab_icon_materials": "Creative Tab Icon — Materials",
-  "block.immersive_munitions.ammo_assembler": "Ammunition Assembler"
+  "block.immersive_munitions.ammo_assembler": "Ammunition Assembler",
+  "gui.immersive_munitions.ammo_assembler": "Ammunition Assembler",
+  "gui.immersive_munitions.ammo_assembler.gunpowder": "Gunpowder",
+  "gui.immersive_munitions.ammo_assembler.projectiles": "Projectiles",
+  "gui.immersive_munitions.ammo_assembler.needs": "Needs: %s",
+  "gui.immersive_munitions.ammo_assembler.clear_belt": "Clear Belt",
+  "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_1": "Returns unfinished casings, with",
+  "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_2": "their gunpowder and projectiles,",
+  "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_3": "to your inventory"
 }

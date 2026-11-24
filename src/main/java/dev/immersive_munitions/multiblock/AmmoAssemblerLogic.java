@@ -18,6 +18,7 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapabil
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.MultiblockProcess;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.MultiblockProcessor;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
+import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.util.DroppingMultiblockOutput;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
 import dev.immersive_munitions.registry.ModParticles;
@@ -25,11 +26,19 @@ import dev.immersive_munitions.registry.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -39,11 +48,14 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -76,6 +88,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     private static final int MAX_CASINGS = 8;
     private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
     public static final int ENERGY_CAPACITY = 16000;
+    // The two front screens (in the top row over the belt, under the intakes): right-clicking either opens the GUI
+    private static final Set<BlockPos> SCREEN_BLOCKS = Set.of(new BlockPos(0, 2, 1), new BlockPos(1, 2, 1));
     // Bottom of the powder head's drop tube at the bottom of its stroke. Its stream of powder: how many grains, how
     // far below the tube they reach (about to the casing's mouth); the belt carries a casing 3 blocks per cycle
     private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
@@ -165,7 +179,20 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
     }
 
-    /** The gunpowder hopper: one slot, gunpowder only. */
+    @Override
+    public InteractionResult click(IMultiblockContext<State> ctx, BlockPos posInMultiblock, Player player,
+                                   InteractionHand hand, BlockHitResult absoluteHit, boolean isClient) {
+        if (!SCREEN_BLOCKS.contains(posInMultiblock)) return InteractionResult.PASS;
+        if (!isClient) {
+            BlockPos clicked = ctx.getLevel().toAbsolute(posInMultiblock);
+            player.openMenu(new SimpleMenuProvider(
+                    (id, inventory, p) -> AmmoAssemblerMenu.makeServer(id, inventory, new MultiblockMenuContext<>(ctx, clicked)),
+                    Component.translatable("gui.immersive_munitions.ammo_assembler")));
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    /** The gunpowder hopper: one slot, gunpowder only. Shared with the GUI's client side so it filters the same. */
     static ItemStackHandler gunpowderSlot(Runnable markDirty) {
         return slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
     }
@@ -281,6 +308,40 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         @Override
         public void doProcessOutput(ItemStack result, IMultiblockLevel level) {
             output.insertOrDrop(result, level);
+        }
+
+        /** Server: what the belt is held up waiting for (the first casing stopped at a station), or EMPTY. */
+        ItemStack waitingFor(Level level) {
+            for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
+                if (process instanceof AssemblyProcess casing) {
+                    IngredientWithSize need = casing.waitingFor(this, level);
+                    if (need == null) continue;
+                    ItemStack[] stacks = need.getMatchingStacks();
+                    return stacks.length == 0 ? ItemStack.EMPTY : stacks[0];
+                }
+            return ItemStack.EMPTY;
+        }
+
+        /**
+         * Server: takes every casing that hasn't reached the press off the belt and gives the player what it's made of
+         * so far (casing, gunpowder, projectile), into their inventory or at their feet if it's full. Rounds at the
+         * press finish as normal. Returns whether anything was taken.
+         */
+        boolean clearBelt(Level level, Player player) {
+            Set<Long> cleared = new HashSet<>();
+            for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
+                if (process instanceof AssemblyProcess casing && casing.beforePress(level)) {
+                    casing.parts(level).forEach(part -> ItemHandlerHelper.giveItemToPlayer(player, part));
+                    cleared.add(casing.id());
+                }
+            if (cleared.isEmpty()) return false;
+            // the queue is read-only, so rebuild it from its saved form without the cleared casings
+            ListTag kept = new ListTag();
+            if (processor.toNBT() instanceof ListTag all)
+                for (Tag tag : all)
+                    if (tag instanceof CompoundTag process && !cleared.contains(process.getLong("id"))) kept.add(process);
+            processor.fromNBT(kept, AssemblyProcess::new);
+            return true;
         }
 
         public boolean isPowered() {

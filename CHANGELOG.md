@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.5-alpha (2026-11-24)
+
+The Ammunition Assembler gets a GUI.
+
+- Right-click either of the machine's front screens to open it. It's styled like IE's machines (remixed from IE's GUI art).
+- It shows the machine's stored energy on IE's gauge. Hover for the exact amount, out of 16,000.
+- The gunpowder and projectile hoppers are two slots: put items in, take them out, or shift-click. Each slot only takes its own item, and an empty slot names what goes in it.
+- When the belt is jammed, a red line says what it's waiting for, e.g. "Needs: 9MM Projectile" when the wrong projectiles are loaded.
+- **Clear Belt** takes every casing that hasn't reached the press off the belt. You get back each casing with its gunpowder and projectile, if it had them yet. They go into your inventory, or drop at your feet when it's full. Rounds already at the press finish as normal.
+
 ## 0.0.4-alpha (2026-11-24)
 
 The Ammunition Assembler gets its finished model and animations.

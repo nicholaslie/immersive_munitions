@@ -1,5 +1,6 @@
 package dev.immersive_munitions.multiblock;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.env.IMultiblockLevel;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.MultiblockProcessInWorld;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
@@ -11,6 +12,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 
@@ -54,6 +58,39 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         filled = client.filled;
         placed = client.placed;
         moving = client.moving;
+    }
+
+    /** What this casing is held up at its station waiting for (its gunpowder or projectile), or null if it isn't. */
+    @Nullable
+    IngredientWithSize waitingFor(State state, Level level) {
+        AmmoAssemblyRecipe recipe = getRecipe(level);
+        if (recipe == null) return null;
+        if (reachesFill(level) && !state.take(state.gunpowder, recipe.gunpowder, true)) return recipe.gunpowder;
+        if (reachesPlace(level) && !state.take(state.projectiles, recipe.projectile, true)) return recipe.projectile;
+        return null;
+    }
+
+    /** Whether it hasn't reached the press yet, so it can still be taken back apart (Clear Belt). */
+    boolean beforePress(Level level) {
+        return processTick < AmmoAssemblerLogic.PRESS_POINT * getMaxTicks(level);
+    }
+
+    /** What it's made of so far: the casing, plus its gunpowder once filled and its projectile once placed. */
+    List<ItemStack> parts(Level level) {
+        List<ItemStack> parts = new ArrayList<>();
+        if (!inputItems.isEmpty()) parts.add(inputItems.get(0).copy());
+        AmmoAssemblyRecipe recipe = getRecipe(level);
+        if (recipe != null) {
+            if (filled) parts.add(example(recipe.gunpowder));
+            if (placed) parts.add(example(recipe.projectile));
+        }
+        parts.removeIf(ItemStack::isEmpty);
+        return parts;
+    }
+
+    private static ItemStack example(IngredientWithSize ingredient) {
+        ItemStack[] stacks = ingredient.getMatchingStacks();
+        return stacks.length == 0 ? ItemStack.EMPTY : stacks[0].copy();
     }
 
     public boolean isFilled() {
