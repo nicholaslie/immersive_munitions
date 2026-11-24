@@ -135,7 +135,7 @@ def front_screens():
     group("front_screens")
     for cx in (-0.5, 0.5):
         box(cx - 0.32, cx + 0.32, 1.40, 1.86, 1.975, 1.99, "screen", "screen")
-    box(1.30, 1.70, 1.44, 1.84, 1.975, 1.985, "trim", "lamp_plate")      # power indicator: lit when powered
+    box(1.30, 1.70, 1.44, 1.84, 1.975, 1.985, "trim", "lamp_plate")      # status lamp: lit while working
     disc(1.5, 1.64, 0.13, 1.985, 1.994, "lamp", "power_lamp")
 
 

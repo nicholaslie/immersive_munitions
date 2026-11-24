@@ -80,6 +80,8 @@ DYNAMIC = {
     "wheel": ("metering_wheel",),
     "jaws": ("jaw_left", "jaw_right"),
     "press": ("crosshead", "ram", "seating_die", "lock_ring"),
+    # not moving, but switched: the renderer moves it onto the lit lamp tile (one tile right) while working
+    "lamp": ("power_lamp",),
 }
 BY_NAME.update({
     "metering_valve": HOUSING, "escapement": HOUSING, "metering_wheel": sheet(3, 2),

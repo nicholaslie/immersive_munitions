@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 
 /**
@@ -18,17 +19,41 @@ import java.util.function.BiFunction;
  * then under the feeder until it gets its projectile, then the press seats it into the finished round.
  */
 public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe> {
+    // How far (in ticks) the client's belt may be from a sync before it gives way to the server's
+    private static final int MAX_CLIENT_DRIFT = 2;
+
+    // Tells this casing apart from the others across syncs, so the client can keep its own place on the belt
+    private final long id;
     private boolean filled;
     private boolean placed;
 
     public AssemblyProcess(AmmoAssemblyRecipe recipe, NonNullList<ItemStack> casing) {
         super(recipe, AmmoAssemblerLogic.PRESS_POINT, casing);
+        id = ThreadLocalRandom.current().nextLong();
     }
 
     public AssemblyProcess(BiFunction<Level, ResourceLocation, AmmoAssemblyRecipe> getRecipe, CompoundTag nbt) {
         super(getRecipe, nbt);
+        id = nbt.contains("id") ? nbt.getLong("id") : ThreadLocalRandom.current().nextLong();
         filled = nbt.getBoolean("filled");
         placed = nbt.getBoolean("placed");
+    }
+
+    long id() {
+        return id;
+    }
+
+    /**
+     * Client only, on a sync: this is the server's copy of a casing the client was already running. The server's
+     * numbers are a tick or so old by the time they arrive, so unless the two have drifted apart, keep the client's
+     * place (and its interpolation) rather than jumping the casing back.
+     */
+    void keepClientProgress(AssemblyProcess client) {
+        if (Math.abs(client.processTick - processTick) > MAX_CLIENT_DRIFT) return;
+        processTick = client.processTick;
+        filled = client.filled;
+        placed = client.placed;
+        moving = client.moving;
     }
 
     public boolean isFilled() {
@@ -78,7 +103,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         int max = getMaxTicks(level);
         if (!canMove || processTick >= max) return false;
         if (reachesFill(level)) {
-            if (!state.hasGunpowder) return false;
+            if (!state.hasGunpowder()) return false;
             filled = true;
             state.clientFills++;
         }
@@ -110,6 +135,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     @Override
     public void writeExtraDataToNBT(CompoundTag nbt) {
         super.writeExtraDataToNBT(nbt);
+        nbt.putLong("id", id);
         nbt.putBoolean("filled", filled);
         nbt.putBoolean("placed", placed);
     }

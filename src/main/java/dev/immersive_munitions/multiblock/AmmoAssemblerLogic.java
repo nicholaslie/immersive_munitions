@@ -20,14 +20,17 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.process.Multibl
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
 import blusunrize.immersiveengineering.common.util.DroppingMultiblockOutput;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
+import dev.immersive_munitions.registry.ModParticles;
 import dev.immersive_munitions.registry.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.Tags;
@@ -38,7 +41,9 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -69,7 +74,12 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     private static final float MIN_SPACING = 1 / 8f;
     // Enough room on the belt for a full cycle's worth of casings at that spacing
     private static final int MAX_CASINGS = 8;
-    private static final int RESYNC_TICKS = 20;
+    private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
+    // Bottom of the powder head's drop tube at the bottom of its stroke. Its stream of powder: how many grains, how
+    // far below the tube they reach (about to the casing's mouth); the belt carries a casing 3 blocks per cycle
+    private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
+    private static final int STREAM_GRAINS = 30, SMOKE_WISPS = 3;
+    private static final double STREAM_LENGTH = 0.12, BELT_BLOCKS = 3;
 
     @Override
     public State createInitialState(IInitialMultiblockContext<State> ctx) {
@@ -80,18 +90,22 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     public void tickServer(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
         boolean active = state.processor.tickServer(state, ctx.getLevel(), state.rsState.isEnabled(ctx));
-        boolean powder = !state.gunpowder.getStackInSlot(0).isEmpty();
-        ItemStack projectile = state.projectiles.getStackInSlot(0);
+        ItemStack powder = state.gunpowder.getStackInSlot(0), projectile = state.projectiles.getStackInSlot(0);
+        state.ticksSinceSync++;
         // The client runs the belt itself (tickClient); resync when what it relies on changes, and now and then
-        // while running so its casings don't drift
-        boolean resync = active != state.active || powder != state.hasGunpowder
-                || !ItemStack.isSameItemSameTags(projectile, state.feederProjectile)
-                || (active && ++state.ticksSinceSync >= RESYNC_TICKS);
+        // while running so its casings don't drift. The screens' counts only need to keep roughly up, so a change
+        // in count alone waits a few ticks (a hopper and the belt each change them every 8 ticks or so)
+        boolean counts = powder.getCount() != state.shownGunpowder.getCount()
+                || projectile.getCount() != state.shownProjectiles.getCount();
+        boolean resync = active != state.active
+                || !ItemStack.isSameItemSameTags(powder, state.shownGunpowder)
+                || !ItemStack.isSameItemSameTags(projectile, state.shownProjectiles)
+                || (counts && state.ticksSinceSync >= COUNT_SYNC_TICKS)
+                || (active && state.ticksSinceSync >= RESYNC_TICKS);
         state.active = active;
-        state.hasGunpowder = powder;
-        if (!ItemStack.isSameItemSameTags(projectile, state.feederProjectile))
-            state.feederProjectile = projectile.copyWithCount(1);
         if (resync) {
+            state.shownGunpowder = powder.copy();
+            state.shownProjectiles = projectile.copy();
             state.ticksSinceSync = 0;
             ctx.requestMasterBESync();
         }
@@ -102,8 +116,33 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         State state = ctx.getState();
         Level level = ctx.getLevel().getRawLevel();
         for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : state.processor.getQueue())
-            if (process instanceof AssemblyProcess casing)
+            if (process instanceof AssemblyProcess casing) {
+                boolean wasFilled = casing.isFilled();
                 casing.tickClient(state, level, state.active && state.additionalCanProcessCheck(process, level));
+                if (!wasFilled && casing.isFilled()) pourPowder(ctx.getLevel(), level, casing.getMaxTicks(level));
+            }
+    }
+
+    // A quick little stream of powder from the drop tube into the casing it fills: grains strung out between the
+    // tube and the casing's mouth, falling fast, and carried along with the casing at the belt's speed
+    private static void pourPowder(IMultiblockLevel mbLevel, Level level, int maxTicks) {
+        if (maxTicks <= 0) return;
+        Vec3 tube = mbLevel.toAbsolute(DROP_TUBE_TIP);
+        Vec3 belt = mbLevel.toAbsolute(DROP_TUBE_TIP.add(BELT_BLOCKS / maxTicks, 0, 0)).subtract(tube);
+        RandomSource random = level.random;
+        for (int i = 0; i < STREAM_GRAINS; i++) {
+            // evenly spaced down the stream (a little jitter), so the grains overlap into one unbroken line
+            double drop = (i + random.nextDouble()) / STREAM_GRAINS * STREAM_LENGTH;
+            double jx = (random.nextDouble() - 0.5) * 0.018, jz = (random.nextDouble() - 0.5) * 0.008;
+            level.addParticle(ModParticles.GUNPOWDER.get(), tube.x + jx, tube.y - drop, tube.z + jz,
+                    belt.x, -0.05 - random.nextDouble() * 0.02, belt.z);
+        }
+        // and a small poof of smoke out of the tube's mouth
+        for (int i = 0; i < SMOKE_WISPS; i++) {
+            double vx = (random.nextDouble() - 0.5) * 0.015, vz = (random.nextDouble() - 0.5) * 0.015;
+            level.addParticle(ModParticles.POWDER_SMOKE.get(), tube.x, tube.y, tube.z,
+                    vx, -0.02 - random.nextDouble() * 0.015, vz);
+        }
     }
 
     @Override
@@ -154,11 +193,12 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         final IItemHandler casingInput;
         private final AveragingEnergyStorage energy = new AveragingEnergyStorage(16000);
         private final DroppingMultiblockOutput output;
+        // Synced: whether the machine is working (runs the client's belt, and lights the lamp on the roof, which
+        // glows while working like the active textures of IE / IG / IT / IP machines)
         private boolean active;
-        // Synced so the client can run the belt and show the feeder's projectile
-        boolean hasGunpowder;
-        // One of what's in the projectile hopper (empty if none): the round the feeder's jaws hold
-        ItemStack feederProjectile = ItemStack.EMPTY;
+        // Synced copies of what's in the two hoppers, as of the last sync: the client runs the belt by them, the
+        // feeder's jaws hold one of the projectiles, and the front screens show the counts
+        ItemStack shownGunpowder = ItemStack.EMPTY, shownProjectiles = ItemStack.EMPTY;
         private int ticksSinceSync;
         // Client only: casings filled so far, which turns the powder handwheel
         int clientFills;
@@ -229,12 +269,22 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             return active;
         }
 
-        public boolean hasProjectiles() {
-            return !feederProjectile.isEmpty();
+        public boolean hasGunpowder() {
+            return !shownGunpowder.isEmpty();
         }
 
-        public ItemStack feederProjectile() {
-            return feederProjectile;
+        public boolean hasProjectiles() {
+            return !shownProjectiles.isEmpty();
+        }
+
+        /** Client: the gunpowder hopper's contents, as of the last sync. Don't modify. */
+        public ItemStack shownGunpowder() {
+            return shownGunpowder;
+        }
+
+        /** Client: the projectile hopper's contents, as of the last sync. Don't modify. */
+        public ItemStack shownProjectiles() {
+            return shownProjectiles;
         }
 
         public int clientFills() {
@@ -261,16 +311,23 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public void writeSyncNBT(CompoundTag nbt) {
             nbt.put("processor", processor.toNBT());
             nbt.putBoolean("active", active);
-            nbt.putBoolean("powder", hasGunpowder);
-            if (!feederProjectile.isEmpty()) nbt.put("projectile", feederProjectile.save(new CompoundTag()));
+            if (!shownGunpowder.isEmpty()) nbt.put("gunpowder", shownGunpowder.save(new CompoundTag()));
+            if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(new CompoundTag()));
         }
 
         @Override
         public void readSyncNBT(CompoundTag nbt) {
+            // Casings the client is already running keep their place unless they have drifted (see keepClientProgress)
+            Map<Long, AssemblyProcess> running = new HashMap<>();
+            for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
+                if (process instanceof AssemblyProcess casing) running.put(casing.id(), casing);
             processor.fromNBT(nbt.get("processor"), AssemblyProcess::new);
+            for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
+                if (process instanceof AssemblyProcess casing && running.containsKey(casing.id()))
+                    casing.keepClientProgress(running.get(casing.id()));
             active = nbt.getBoolean("active");
-            hasGunpowder = nbt.getBoolean("powder");
-            feederProjectile = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
+            shownGunpowder = nbt.contains("gunpowder") ? ItemStack.of(nbt.getCompound("gunpowder")) : ItemStack.EMPTY;
+            shownProjectiles = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
         }
     }
 

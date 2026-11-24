@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
  *   0,2 IE steel sheet metal, brightened to the light panel grey (tiles like the roof)
  *   1,2 turned steel   2,2 chrome   3,2 red handwheel   4,2 gunmetal housing
  *   2,3 knurled jaw
- *   0,3 power lamp off   1,3 power lamp on
+ *   0,3 status lamp off   1,3 status lamp on (lit while working)
  *   4..7,0 conveyor rail strip (left end, middle, right end, both ends)
  *   0..3,4..7  panel set, light      4..7,4..7  panel set, dark
  *     A panel set is 4x4 cells: a 3x3 nine-slice (corners, edges, middle), plus a column for panels one block

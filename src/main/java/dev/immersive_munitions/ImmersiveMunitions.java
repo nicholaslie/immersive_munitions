@@ -5,6 +5,7 @@ import dev.immersive_munitions.registry.CreativeIconItems;
 import dev.immersive_munitions.registry.ModBlocks;
 import dev.immersive_munitions.registry.ModItems;
 import dev.immersive_munitions.registry.ModMultiblocks;
+import dev.immersive_munitions.registry.ModParticles;
 import dev.immersive_munitions.registry.ModRecipes;
 import dev.immersive_munitions.registry.ModTabs;
 import dev.immersive_munitions.worldgen.ModBiomeModifiers;
@@ -30,6 +31,7 @@ public class ImmersiveMunitions {
         ModMultiblocks.BLOCK_ENTITIES.register(bus);
         ModRecipes.TYPES.register(bus);
         ModRecipes.SERIALIZERS.register(bus);
+        ModParticles.TYPES.register(bus);
         ModTabs.TABS.register(bus);
         ModBiomeModifiers.SERIALIZERS.register(bus);
 

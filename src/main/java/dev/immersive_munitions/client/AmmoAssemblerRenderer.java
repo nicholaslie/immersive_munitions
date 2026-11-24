@@ -14,7 +14,9 @@ import dev.immersive_munitions.multiblock.AmmoAssemblerLogic.State;
 import dev.immersive_munitions.multiblock.AssemblyProcess;
 import dev.immersive_munitions.registry.ModMultiblocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -34,6 +36,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.model.IQuadTransformer;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -54,7 +57,15 @@ import java.util.WeakHashMap;
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<State>> {
     private static final ResourceLocation POWDER = part("powder"), WHEEL = part("wheel"), JAWS = part("jaws"),
-            PRESS = part("press");
+            PRESS = part("press"), LAMP = part("lamp");
+    // The lamp's lit art is the next tile right on the machine's 128px sheet of 16px tiles
+    private static final float LAMP_TILE_SHIFT = 16 / 128f;
+    // Front screens (model.py front_screens): 0.64 x 0.46, centred at x = -0.5 and 0.5, y = 1.63, face at z = 1.99.
+    // The icon sits left of centre and the count right; text is about 0.1 tall, in display green (EMPTY in red)
+    private static final float SCREEN_POWDER_X = -0.5f, SCREEN_FEEDER_X = 0.5f, SCREEN_Y = 1.63f, SCREEN_Z = 1.99f;
+    private static final float SCREEN_ICON_DX = -0.12f, SCREEN_ICON_SIZE = 0.2f, SCREEN_COUNT_DX = 0.1f;
+    private static final float SCREEN_TEXT_SCALE = 0.012f;
+    private static final int SCREEN_TEXT = 0xFF5CFF7A, SCREEN_EMPTY = 0xFFFF4A3A;
 
     private static final float BELT_START = -1, BELT_LENGTH = 3, BELT_Z = 1.5f, BELT_TOP = 0.125f;
     // Casings and rounds are drawn as their (unlabeled) item sprites at this size
@@ -77,7 +88,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
 
     @SubscribeEvent
     public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
-        for (ResourceLocation model : List.of(POWDER, WHEEL, JAWS, PRESS)) event.register(model);
+        for (ResourceLocation model : List.of(POWDER, WHEEL, JAWS, PRESS, LAMP)) event.register(model);
     }
 
     @SubscribeEvent
@@ -138,11 +149,17 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         drawPart(POWDER, 0, -POWDER_STROKE * fill, pose, buffers, rotation, light, packedOverlay);
         drawPart(JAWS, 0, -FEED_STROKE * feed, pose, buffers, rotation, light, packedOverlay);
         // The jaws hold one of whatever is in the projectile hopper, drawn like the casings on the belt
-        ItemStack projectile = state.feederProjectile();
+        ItemStack projectile = state.shownProjectiles();
         if (!projectile.isEmpty())
             drawItem(projectile, FEEDER_X, FEEDER_BOTTOM - FEED_STROKE * feed, FEEDER_SCALE, pose, buffers, level,
                     light, packedOverlay);
         drawPart(PRESS, 0, -PRESS_STROKE * press, pose, buffers, rotation, light, packedOverlay);
+        if (state.isActive()) drawLitLamp(pose, buffers, packedOverlay);
+        else drawPart(LAMP, 0, 0, pose, buffers, rotation, light, packedOverlay);
+
+        // Front screens: what each roof hopper holds, gunpowder over the powder station, projectiles over the feeder
+        drawScreen(state.shownGunpowder(), SCREEN_POWDER_X, pose, buffers, level, packedOverlay);
+        drawScreen(state.shownProjectiles(), SCREEN_FEEDER_X, pose, buffers, level, packedOverlay);
 
         // Handwheel: a quarter turn for every casing filled, easing through the one passing under it now
         // (a casing counts as filled halfway through its turn, so take that quarter back off while it finishes)
@@ -191,6 +208,55 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         float nearest = 1;
         for (float p : progress) nearest = Math.min(nearest, Math.abs(p - station));
         return nearest < WINDOW ? Mth.cos(Mth.HALF_PI * nearest / WINDOW) : 0;
+    }
+
+    // One front screen: the hopper's item as an icon with its count beside it, or EMPTY; lit like a display
+    private static void drawScreen(ItemStack stack, float cx, PoseStack pose, MultiBufferSource buffers, Level level,
+                                   int overlay) {
+        Minecraft mc = Minecraft.getInstance();
+        Font font = mc.font;
+        if (stack.isEmpty()) {
+            drawText(font, "EMPTY", cx, SCREEN_Y, SCREEN_EMPTY, pose, buffers);
+            return;
+        }
+        pose.pushPose();
+        pose.translate(cx + SCREEN_ICON_DX, SCREEN_Y, SCREEN_Z + SCREEN_ICON_SIZE * 0.05f);
+        pose.mulPose(Axis.YP.rotationDegrees(180));    // the fixed item transform turns it to face -z; face the front
+        pose.scale(SCREEN_ICON_SIZE, SCREEN_ICON_SIZE, SCREEN_ICON_SIZE * 0.1f);
+        mc.getItemRenderer().renderStatic(stack, ItemDisplayContext.FIXED, LightTexture.FULL_BRIGHT, overlay, pose,
+                buffers, level, 0);
+        pose.popPose();
+        drawText(font, String.valueOf(stack.getCount()), cx + SCREEN_COUNT_DX, SCREEN_Y, SCREEN_TEXT, pose, buffers);
+    }
+
+    // Text centred on (x, y) on the screens' face, reading from the front
+    private static void drawText(Font font, String text, float x, float y, int color, PoseStack pose,
+                                 MultiBufferSource buffers) {
+        pose.pushPose();
+        pose.translate(x, y, SCREEN_Z + 0.002f);
+        pose.scale(SCREEN_TEXT_SCALE, -SCREEN_TEXT_SCALE, SCREEN_TEXT_SCALE);
+        font.drawInBatch(text, -font.width(text) / 2f, -font.lineHeight / 2f + 1, color, false, pose.last().pose(),
+                buffers, Font.DisplayMode.POLYGON_OFFSET, 0, LightTexture.FULL_BRIGHT);
+        pose.popPose();
+    }
+
+    // The lamp, lit while the machine works: its quads moved onto the lit tile, at full brightness and unshaded, so it glows
+    private static void drawLitLamp(PoseStack pose, MultiBufferSource buffers, int overlay) {
+        BakedModel model = Minecraft.getInstance().getModelManager().getModel(LAMP);
+        VertexConsumer out = buffers.getBuffer(RenderType.solid());
+        int[] lights = {LightTexture.FULL_BRIGHT, LightTexture.FULL_BRIGHT, LightTexture.FULL_BRIGHT, LightTexture.FULL_BRIGHT};
+        float[] shade = {1, 1, 1, 1};
+        for (BakedQuad quad : model.getQuads(null, null, RandomSource.create(42), ModelData.EMPTY, null)) {
+            TextureAtlasSprite sprite = quad.getSprite();
+            float shift = (sprite.getU1() - sprite.getU0()) * LAMP_TILE_SHIFT;
+            int[] vertices = quad.getVertices().clone();
+            for (int v = 0; v < 4; v++) {
+                int u = v * IQuadTransformer.STRIDE + IQuadTransformer.UV0;
+                vertices[u] = Float.floatToRawIntBits(Float.intBitsToFloat(vertices[u]) + shift);
+            }
+            BakedQuad lit = new BakedQuad(vertices, quad.getTintIndex(), quad.getDirection(), sprite, false);
+            out.putBulkData(pose.last(), lit, shade, 1, 1, 1, lights, overlay, false);
+        }
     }
 
     private static void drawPart(ResourceLocation name, float dx, float dy, PoseStack pose, MultiBufferSource buffers,
