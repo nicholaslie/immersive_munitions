@@ -81,14 +81,16 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         State state = ctx.getState();
         boolean active = state.processor.tickServer(state, ctx.getLevel(), state.rsState.isEnabled(ctx));
         boolean powder = !state.gunpowder.getStackInSlot(0).isEmpty();
-        boolean projectiles = !state.projectiles.getStackInSlot(0).isEmpty();
+        ItemStack projectile = state.projectiles.getStackInSlot(0);
         // The client runs the belt itself (tickClient); resync when what it relies on changes, and now and then
         // while running so its casings don't drift
-        boolean resync = active != state.active || powder != state.hasGunpowder || projectiles != state.hasProjectiles
+        boolean resync = active != state.active || powder != state.hasGunpowder
+                || !ItemStack.isSameItemSameTags(projectile, state.feederProjectile)
                 || (active && ++state.ticksSinceSync >= RESYNC_TICKS);
         state.active = active;
         state.hasGunpowder = powder;
-        state.hasProjectiles = projectiles;
+        if (!ItemStack.isSameItemSameTags(projectile, state.feederProjectile))
+            state.feederProjectile = projectile.copyWithCount(1);
         if (resync) {
             state.ticksSinceSync = 0;
             ctx.requestMasterBESync();
@@ -155,7 +157,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         private boolean active;
         // Synced so the client can run the belt and show the feeder's projectile
         boolean hasGunpowder;
-        boolean hasProjectiles;
+        // One of what's in the projectile hopper (empty if none): the round the feeder's jaws hold
+        ItemStack feederProjectile = ItemStack.EMPTY;
         private int ticksSinceSync;
         // Client only: casings filled so far, which turns the powder handwheel
         int clientFills;
@@ -227,7 +230,11 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
 
         public boolean hasProjectiles() {
-            return hasProjectiles;
+            return !feederProjectile.isEmpty();
+        }
+
+        public ItemStack feederProjectile() {
+            return feederProjectile;
         }
 
         public int clientFills() {
@@ -255,7 +262,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             nbt.put("processor", processor.toNBT());
             nbt.putBoolean("active", active);
             nbt.putBoolean("powder", hasGunpowder);
-            nbt.putBoolean("projectiles", hasProjectiles);
+            if (!feederProjectile.isEmpty()) nbt.put("projectile", feederProjectile.save(new CompoundTag()));
         }
 
         @Override
@@ -263,7 +270,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             processor.fromNBT(nbt.get("processor"), AssemblyProcess::new);
             active = nbt.getBoolean("active");
             hasGunpowder = nbt.getBoolean("powder");
-            hasProjectiles = nbt.getBoolean("projectiles");
+            feederProjectile = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
         }
     }
 

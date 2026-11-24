@@ -159,7 +159,7 @@ def projectile_head():
     box(0.64, 0.73, 0.66, 0.86, 1.47, 1.53, "mech", "pawl_lever")
     box(0.40, 0.44, 0.47, 0.70, 1.45, 1.55, "mech", "jaw_left")     # tops hidden in the escapement, so they can slide down
     box(0.56, 0.60, 0.47, 0.70, 1.45, 1.55, "mech", "jaw_right")
-    cyl(0.5, 1.5, 0.03, 0.45, 0.57, "copper", r1=0.012, name="projectile", sides=6)
+    # the projectile in the jaws is the hopper's own item, drawn by AmmoAssemblerRenderer
 
 
 def press_head():

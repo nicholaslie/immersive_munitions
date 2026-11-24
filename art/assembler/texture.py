@@ -79,7 +79,6 @@ DYNAMIC = {
     "powder": ("drop_tube", "expander_tip"),
     "wheel": ("metering_wheel",),
     "jaws": ("jaw_left", "jaw_right"),
-    "round": ("projectile",),
     "press": ("crosshead", "ram", "seating_die", "lock_ring"),
 }
 BY_NAME.update({

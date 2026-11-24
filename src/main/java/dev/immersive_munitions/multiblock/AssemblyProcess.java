@@ -83,7 +83,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
             state.clientFills++;
         }
         if (reachesPlace(level)) {
-            if (!state.hasProjectiles) return false;
+            if (!state.hasProjectiles()) return false;
             placed = true;
         }
         processTick++;

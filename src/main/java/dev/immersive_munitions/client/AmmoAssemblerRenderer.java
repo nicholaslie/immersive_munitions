@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
@@ -53,7 +54,7 @@ import java.util.WeakHashMap;
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<State>> {
     private static final ResourceLocation POWDER = part("powder"), WHEEL = part("wheel"), JAWS = part("jaws"),
-            ROUND = part("round"), PRESS = part("press");
+            PRESS = part("press");
 
     private static final float BELT_START = -1, BELT_LENGTH = 3, BELT_Z = 1.5f, BELT_TOP = 0.125f;
     // Casings and rounds are drawn as their (unlabeled) item sprites at this size
@@ -63,6 +64,12 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
     private static final float POWDER_STROKE = 0.06f, FEED_STROKE = 0.06f, PRESS_STROKE = 0.07f;
     // The handwheel turns a quarter turn per casing filled, about its own centre
     private static final float WHEEL_X = -0.5f, WHEEL_Y = 1.03f;
+    // The projectile in the feeder's jaws: centred between them, its tip end low in the jaws (bottom of the jaws is 0.47)
+    // Smaller than ITEM_SCALE: projectile sprites fill more of their icon than casings do
+    private static final float FEEDER_X = 0.5f, FEEDER_BOTTOM = 0.45f, FEEDER_SCALE = 0.2f;
+    // After the feeder the projectile stands in the casing's mouth, this far toward the machine's front: its front
+    // face just ahead of the casing's (half thicknesses: casing 0.0098, projectile 0.0063), its back inside the casing
+    private static final float SEAT_FRONT = 0.006f;
 
     private static ResourceLocation part(String group) {
         return ResourceLocation.fromNamespaceAndPath(ImmersiveMunitions.MODID, "block/ammo_assembler_" + group);
@@ -70,7 +77,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
 
     @SubscribeEvent
     public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
-        for (ResourceLocation model : List.of(POWDER, WHEEL, JAWS, ROUND, PRESS)) event.register(model);
+        for (ResourceLocation model : List.of(POWDER, WHEEL, JAWS, PRESS)) event.register(model);
     }
 
     @SubscribeEvent
@@ -124,15 +131,18 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             default -> Rotation.NONE;
         };
 
-        VertexConsumer solid = buffers.getBuffer(RenderType.solid());
         float fill = stroke(progress, AmmoAssemblerLogic.FILL_POINT);
         float feed = stroke(progress, AmmoAssemblerLogic.PLACE_POINT);
         float press = stroke(progress, AmmoAssemblerLogic.PRESS_POINT);
 
-        drawPart(POWDER, 0, -POWDER_STROKE * fill, pose, solid, rotation, light, packedOverlay);
-        drawPart(JAWS, 0, -FEED_STROKE * feed, pose, solid, rotation, light, packedOverlay);
-        if (state.hasProjectiles()) drawPart(ROUND, 0, -FEED_STROKE * feed, pose, solid, rotation, light, packedOverlay);
-        drawPart(PRESS, 0, -PRESS_STROKE * press, pose, solid, rotation, light, packedOverlay);
+        drawPart(POWDER, 0, -POWDER_STROKE * fill, pose, buffers, rotation, light, packedOverlay);
+        drawPart(JAWS, 0, -FEED_STROKE * feed, pose, buffers, rotation, light, packedOverlay);
+        // The jaws hold one of whatever is in the projectile hopper, drawn like the casings on the belt
+        ItemStack projectile = state.feederProjectile();
+        if (!projectile.isEmpty())
+            drawItem(projectile, FEEDER_X, FEEDER_BOTTOM - FEED_STROKE * feed, FEEDER_SCALE, pose, buffers, level,
+                    light, packedOverlay);
+        drawPart(PRESS, 0, -PRESS_STROKE * press, pose, buffers, rotation, light, packedOverlay);
 
         // Handwheel: a quarter turn for every casing filled, easing through the one passing under it now
         // (a casing counts as filled halfway through its turn, so take that quarter back off while it finishes)
@@ -147,16 +157,31 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         pose.translate(WHEEL_X, WHEEL_Y, 0);
         pose.mulPose(Axis.ZP.rotation(angle));
         pose.translate(-WHEEL_X, -WHEEL_Y, 0);
-        drawPart(WHEEL, 0, 0, pose, solid, rotation, light, packedOverlay);
+        drawPart(WHEEL, 0, 0, pose, buffers, rotation, light, packedOverlay);
         pose.popPose();
 
-        // Casings: the casing until the feeder places its projectile, then the finished round
+        // Casings: the bare casing, then from the feeder on with its projectile standing in the mouth, then from the
+        // press on the finished round
         for (int i = 0; i < casings.size(); i++) {
             AssemblyProcess casing = casings.get(i);
-            float p = progress.get(i);
-            ItemStack stack = displayStack(casing, level, p);
-            if (stack.isEmpty()) continue;
-            drawItem(stack, BELT_START + BELT_LENGTH * p, pose, buffers, level, light, packedOverlay);
+            float p = progress.get(i), x = BELT_START + BELT_LENGTH * p;
+            AmmoAssemblyRecipe recipe = casing.getRecipe(level);
+            if (p >= AmmoAssemblerLogic.PRESS_POINT && recipe != null && !recipe.getItemOutputs().isEmpty()) {
+                drawItem(recipe.getItemOutputs().get(0), x, BELT_TOP, ITEM_SCALE, pose, buffers, level, light, packedOverlay);
+                continue;
+            }
+            if (casing.inputItems.isEmpty()) continue;
+            ItemStack shell = casing.inputItems.get(0);
+            drawItem(shell, x, BELT_TOP, ITEM_SCALE, pose, buffers, level, light, packedOverlay);
+            if (p < AmmoAssemblerLogic.PLACE_POINT || recipe == null) continue;
+            ItemStack[] projectiles = recipe.projectile.getMatchingStacks();
+            if (projectiles.length == 0) continue;
+            TextureAtlasSprite shellSprite = spriteOf(shell, level);
+            float mouth = BELT_TOP + ITEM_SCALE * (bottomOf(shellSprite) - mouthOf(shellSprite));
+            pose.pushPose();
+            pose.translate(0, 0, SEAT_FRONT);
+            drawItem(projectiles[0], x, mouth, FEEDER_SCALE, pose, buffers, level, light, packedOverlay);
+            pose.popPose();
         }
         pose.popPose();
     }
@@ -168,17 +193,12 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         return nearest < WINDOW ? Mth.cos(Mth.HALF_PI * nearest / WINDOW) : 0;
     }
 
-    private static ItemStack displayStack(AssemblyProcess casing, Level level, float p) {
-        if (p >= AmmoAssemblerLogic.PLACE_POINT) {
-            AmmoAssemblyRecipe recipe = casing.getRecipe(level);
-            if (recipe != null && !recipe.getItemOutputs().isEmpty()) return recipe.getItemOutputs().get(0);
-        }
-        return casing.inputItems.isEmpty() ? ItemStack.EMPTY : casing.inputItems.get(0);
-    }
-
-    private static void drawPart(ResourceLocation name, float dx, float dy, PoseStack pose, VertexConsumer out,
+    private static void drawPart(ResourceLocation name, float dx, float dy, PoseStack pose, MultiBufferSource buffers,
                                  Rotation rotation, int light, int overlay) {
         BakedModel model = Minecraft.getInstance().getModelManager().getModel(name);
+        // Take the solid buffer fresh each time: RenderType.solid() isn't one of the buffer source's fixed buffers,
+        // so drawing an item in between ends it, and writing to the old one corrupts the frame
+        VertexConsumer out = buffers.getBuffer(RenderType.solid());
         pose.pushPose();
         pose.translate(dx, dy, 0);
         RandomSource random = RandomSource.create(42);
@@ -200,19 +220,56 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
         };
     }
 
-    // A flat item standing on the belt, facing the front of the machine, its lowest opaque pixel on the belt
-    private static void drawItem(ItemStack stack, float x, PoseStack pose, MultiBufferSource buffers, Level level,
-                                 int light, int overlay) {
+    // A flat item over the belt, facing the front of the machine, its lowest opaque pixel at height y
+    private static void drawItem(ItemStack stack, float x, float y, float scale, PoseStack pose, MultiBufferSource buffers,
+                                 Level level, int light, int overlay) {
         Minecraft mc = Minecraft.getInstance();
-        BakedModel model = FlatRoundRenderer.flatModel(stack);
-        if (model == null) model = mc.getItemRenderer().getModel(stack, level, null, 0);
-        float bottom = bottomOf(model.getParticleIcon(ModelData.EMPTY));
+        float bottom = bottomOf(spriteOf(stack, level));
         pose.pushPose();
-        pose.translate(x, BELT_TOP - ITEM_SCALE * (0.5f - bottom), BELT_Z);
+        pose.translate(x, y - scale * (0.5f - bottom), BELT_Z);
         pose.mulPose(Axis.YP.rotationDegrees(180));    // the fixed item transform turns it to face -z; face the front
-        pose.scale(ITEM_SCALE, ITEM_SCALE, ITEM_SCALE);
+        pose.scale(scale, scale, scale);
         mc.getItemRenderer().renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, pose, buffers, level, 0);
         pose.popPose();
+    }
+
+    private static TextureAtlasSprite spriteOf(ItemStack stack, Level level) {
+        BakedModel model = FlatRoundRenderer.flatModel(stack);
+        if (model == null) model = Minecraft.getInstance().getItemRenderer().getModel(stack, level, null, 0);
+        return model.getParticleIcon(ModelData.EMPTY);
+    }
+
+    private static final Map<TextureAtlasSprite, Float> MOUTHS = new WeakHashMap<>();
+
+    // A casing's open mouth is the dark band at the top of its sprite. Fraction of the sprite's height (from the
+    // top) down to the bottom of that band, along the casing's centre column, 0..1
+    private static float mouthOf(TextureAtlasSprite sprite) {
+        return MOUTHS.computeIfAbsent(sprite, s -> {
+            SpriteContents c = s.contents();
+            int w = c.width(), h = c.height(), left = w, right = -1;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (!c.isTransparent(0, x, y)) {
+                        left = Math.min(left, x);
+                        right = Math.max(right, x);
+                    }
+            if (right < 0) return 0f;
+            int cx = (left + right) / 2, top = -1, brightest = 0;
+            for (int y = 0; y < h; y++) {
+                if (c.isTransparent(0, cx, y)) continue;
+                if (top < 0) top = y;
+                brightest = Math.max(brightest, luminance(c.getOriginalImage().getPixelRGBA(cx, y)));
+            }
+            if (top < 0) return 0f;
+            int y = top;
+            while (y < h && !c.isTransparent(0, cx, y)
+                    && luminance(c.getOriginalImage().getPixelRGBA(cx, y)) < 0.6f * brightest) y++;
+            return y / (float) h;
+        });
+    }
+
+    private static int luminance(int abgr) {
+        return ((abgr & 255) + (abgr >> 8 & 255) + (abgr >> 16 & 255)) / 3;
     }
 
     private static final Map<TextureAtlasSprite, Float> BOTTOMS = new WeakHashMap<>();
