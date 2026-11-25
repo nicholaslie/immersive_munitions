@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.0.6-alpha (2026-11-24)
+
+Casings can now be made in IE's metal press.
+
+- Press a brass rod in a casing mold to get that caliber's empty casings:
+  - 4 per rod: small pistol calibers
+  - 3 per rod: .50 AE and .500 Magnum
+  - 2 per rod: rifles and 12 Gauge
+  - 1 per rod: .338 Lapua, .50 BMG and 40mm
+- Casing molds are made on IE's Engineer's Workbench from 3 steel plates and a wire cutter, like IE's own molds, using the new **Casing Molds** blueprint. Craft the blueprint like IE's Molds blueprint, but with a brass plate on top.
+- Casings, projectiles and casing molds now use TaCZ's caliber names, e.g. "Empty 5.56x45mm Casing" and ".30-06 Springfield Projectile". Searching a caliber now finds TaCZ's round and ours together.
+- 12 Gauge shells are now all brass, both the empty casing and the finished round in the icon pack. The red art is kept in `art/` as a backup.
+- Removed the 8 category molds (pistol, SMG, rifle and so on). They were only creative tab icons and had no use. Any left in an existing world disappear on load.
+
 ## 0.0.5-alpha (2026-11-24)
 
 The Ammunition Assembler gets a GUI.

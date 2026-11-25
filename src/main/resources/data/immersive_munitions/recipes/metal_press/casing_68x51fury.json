@@ -1,0 +1,7 @@
+{
+  "type": "immersiveengineering:metal_press",
+  "input": {"tag": "forge:rods/brass"},
+  "mold": "immersive_munitions:mold_casing_68x51fury",
+  "result": {"item": "immersive_munitions:empty_casing_68x51fury", "count": 2},
+  "energy": 2400
+}

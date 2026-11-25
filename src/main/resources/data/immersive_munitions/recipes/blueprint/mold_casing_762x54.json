@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "casing_molds",
+  "inputs": [
+    {"base_ingredient": {"tag": "forge:plates/steel"}, "count": 3},
+    {"item": "immersiveengineering:wirecutter"}
+  ],
+  "result": {"item": "immersive_munitions:mold_casing_762x54"}
+}

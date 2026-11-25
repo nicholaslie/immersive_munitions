@@ -19,22 +19,15 @@ public final class AmmoComponentItems {
             "46x30", "500mag", "50ae", "50bmg", "545x39", "556x45", "57x28", "58x42", "68x51fury",
             "762x25", "762x39", "762x54", "792x57", "9mm");
 
-    public static final List<String> MOLD_CATEGORIES = List.of(
-            "dmr", "mg", "pistol", "rifle", "rpg", "shotgun", "smg", "sniper");
-
     public static final Map<String, RegistryObject<Item>> EMPTY_CASINGS = new LinkedHashMap<>();
     public static final Map<String, RegistryObject<Item>> PROJECTILES = new LinkedHashMap<>();
     public static final Map<String, RegistryObject<Item>> CASING_MOLDS = new LinkedHashMap<>();
-    public static final Map<String, RegistryObject<Item>> CATEGORY_MOLDS = new LinkedHashMap<>();
 
     static {
         for (String caliber : CALIBERS) {
             EMPTY_CASINGS.put(caliber, register("empty_casing_" + caliber));
             PROJECTILES.put(caliber, register("projectile_" + caliber));
             CASING_MOLDS.put(caliber, register("mold_casing_" + caliber));
-        }
-        for (String category : MOLD_CATEGORIES) {
-            CATEGORY_MOLDS.put(category, register("mold_" + category));
         }
     }
 
