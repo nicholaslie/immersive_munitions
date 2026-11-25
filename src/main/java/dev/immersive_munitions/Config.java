@@ -2,6 +2,7 @@ package dev.immersive_munitions;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
+/** Common config: whether zinc ore generates, and whether it steps aside for Immersive Geology. */
 public final class Config {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.BooleanValue ZINC_WORLDGEN;

@@ -16,6 +16,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+/** Mod entry point: registers everything with the mod event bus. */
 @Mod(ImmersiveMunitions.MODID)
 public class ImmersiveMunitions {
     public static final String MODID = "immersive_munitions";

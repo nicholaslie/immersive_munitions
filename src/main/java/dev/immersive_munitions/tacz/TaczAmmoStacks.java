@@ -4,6 +4,7 @@ import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+/** Creates TaCZ ammo item stacks through TaCZ's API. */
 public final class TaczAmmoStacks {
 
     /** A real TaCZ ammo stack, e.g. create("9mm", 30). */

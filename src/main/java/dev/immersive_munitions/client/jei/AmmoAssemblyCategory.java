@@ -21,10 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * JEI page for the Ammunition Assembler: casing, gunpowder and projectile in, the TaCZ round out, with the energy per
- * round and the time a casing takes to cross the belt underneath.
- */
+/** JEI page for an Ammunition Assembler recipe: casing, gunpowder and projectile in, the TaCZ round out. */
 public class AmmoAssemblyCategory implements IRecipeCategory<AmmoAssemblyRecipe> {
     public static final RecipeType<AmmoAssemblyRecipe> TYPE =
             RecipeType.create(ImmersiveMunitions.MODID, "ammo_assembly", AmmoAssemblyRecipe.class);

@@ -7,13 +7,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * The blueprint: data/immersive_munitions/structures/multiblocks/ammo_assembler.nbt.
- * 3 long (x, the belt runs toward +x), 3 tall, 2 deep (z=1 is the belt side). Hammer the middle conveyor.
- * Not mirrorable: the belt always runs the same way relative to the front, so one model covers it.
+ * The Ammunition Assembler's structure (data/immersive_munitions/structures/multiblocks/ammo_assembler.nbt): 3 long,
+ * 3 tall, 2 deep, formed by hammering the middle conveyor. Not mirrorable.
  */
 public class AmmoAssemblerMultiblock extends IETemplateMultiblock {
-    // Must be declared before INSTANCE: static fields initialize top to bottom.
-    // The master sits in the back middle, like IE's bottling machine, so the split model's offsets line up.
+    // The master sits in the back middle like IE's bottling machine. Declared before INSTANCE, which uses them
     private static final BlockPos MASTER = new BlockPos(1, 1, 0);
     private static final BlockPos MIDDLE_CONVEYOR = new BlockPos(1, 1, 1);
 

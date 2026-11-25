@@ -61,37 +61,37 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-/*
- * Positions are in blueprint space: x 0..2 along the belt (input at 0), y 0..2, z 0 = back row, z 1 = belt row.
- * IE calls the back face FRONT and the input-end face RIGHT; see the bottling machine, which has the same layout.
+/**
+ * The Ammunition Assembler's logic: casings ride a belt past three stations (gunpowder, projectile, press) and come
+ * out as TaCZ rounds.
+ * <p>
+ * Positions are in blueprint space: x 0..2 along the belt (input end at 0), y 0..2, z 0 back row, z 1 belt row.
+ * Like IE's bottling machine, IE calls the back face FRONT and the input end RIGHT.
  */
 public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.State>,
         IServerTickableComponent<AmmoAssemblerLogic.State>, IClientTickableComponent<AmmoAssemblerLogic.State> {
+
+    // Ports: casings in at the input end, hopper intakes on the roof above the screens, power on the roof at the back
     public static final BlockPos REDSTONE_POS = new BlockPos(1, 0, 1);
     private static final BlockPos BELT_START = new BlockPos(0, 1, 1);
     private static final CapabilityPosition CASING_INPUT = new CapabilityPosition(0, 1, 1, RelativeBlockFace.RIGHT);
     private static final MultiblockFace OUTPUT = new MultiblockFace(3, 1, 1, RelativeBlockFace.RIGHT);
-    // Roof intakes over the belt row, right above their screens (gunpowder over the first bay, projectiles over the middle bay),
-    // and IE's power port on the roof over the press bay, back row, facing up for a wire connector (as IE does it)
     private static final CapabilityPosition GUNPOWDER_INPUT = new CapabilityPosition(0, 2, 1, RelativeBlockFace.UP);
     private static final CapabilityPosition PROJECTILE_INPUT = new CapabilityPosition(1, 2, 1, RelativeBlockFace.UP);
     private static final CapabilityPosition ENERGY_INPUT = new CapabilityPosition(2, 2, 0, RelativeBlockFace.UP);
+    private static final Set<BlockPos> SCREEN_BLOCKS = Set.of(new BlockPos(0, 2, 1), new BlockPos(1, 2, 1));
 
-    // How far along the belt (0..1) each station sits: one per block, centred on it
+    // Belt: station positions (0..1 along the belt) and casing spacing. 1/8 of a 60-tick cycle is one casing every
+    // 7.5 ticks, just faster than a hopper, so a hopper feed never backs up
     public static final float FILL_POINT = 1 / 6f;
     public static final float PLACE_POINT = 0.5f;
     public static final float PRESS_POINT = 5 / 6f;
-    // Casings keep at least this much of a cycle between each other. With a 60-tick recipe that is one casing
-    // every 7.5 ticks, slightly faster than a hopper (8 ticks per item), so a hopper feed never backs up.
     private static final float MIN_SPACING = 1 / 8f;
-    // Enough room on the belt for a full cycle's worth of casings at that spacing
     private static final int MAX_CASINGS = 8;
-    private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
     public static final int ENERGY_CAPACITY = 16000;
-    // The two front screens (in the top row over the belt, under the intakes): right-clicking either opens the GUI
-    private static final Set<BlockPos> SCREEN_BLOCKS = Set.of(new BlockPos(0, 2, 1), new BlockPos(1, 2, 1));
-    // Bottom of the powder head's drop tube at the bottom of its stroke. Its stream of powder: how many grains, how
-    // far below the tube they reach (about to the casing's mouth); the belt carries a casing 3 blocks per cycle
+    private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
+
+    // Powder effect: the drop tube's tip (blueprint space) and the stream poured from it
     private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
     private static final int STREAM_GRAINS = 30, SMOKE_WISPS = 6;
     private static final double STREAM_LENGTH = 0.12, BELT_BLOCKS = 3;
@@ -101,6 +101,10 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         return new State(ctx);
     }
 
+    // ---- Ticking ----
+
+    // The server runs the recipes; the client runs its own copy of the belt and is resynced when something it relies
+    // on changes, and every second while running. Count-only changes wait a few ticks
     @Override
     public void tickServer(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
@@ -108,9 +112,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         boolean powered = state.energy.getEnergyStored() > 0;
         ItemStack powder = state.gunpowder.getStackInSlot(0), projectile = state.projectiles.getStackInSlot(0);
         state.ticksSinceSync++;
-        // The client runs the belt itself (tickClient); resync when what it relies on changes, and now and then
-        // while running so its casings don't drift. The screens' counts only need to keep roughly up, so a change
-        // in count alone waits a few ticks (a hopper and the belt each change them every 8 ticks or so)
         boolean counts = powder.getCount() != state.shownGunpowder.getCount()
                 || projectile.getCount() != state.shownProjectiles.getCount();
         boolean resync = active != state.active || powered != state.powered
@@ -140,22 +141,20 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             }
     }
 
-    // A quick little stream of powder from the drop tube into the casing it fills: grains strung out between the
-    // tube and the casing's mouth, falling fast, and carried along with the casing at the belt's speed
+    // A quick stream of powder grains from the drop tube into the casing, plus a small puff of smoke, all moving
+    // along with the belt
     private static void pourPowder(IMultiblockLevel mbLevel, Level level, int maxTicks) {
         if (maxTicks <= 0) return;
         Vec3 tube = mbLevel.toAbsolute(DROP_TUBE_TIP);
         Vec3 belt = mbLevel.toAbsolute(DROP_TUBE_TIP.add(BELT_BLOCKS / maxTicks, 0, 0)).subtract(tube);
         RandomSource random = level.random;
         for (int i = 0; i < STREAM_GRAINS; i++) {
-            // evenly spaced down the stream (a little jitter), so the grains overlap into one unbroken line
             double drop = (i + random.nextDouble()) / STREAM_GRAINS * STREAM_LENGTH;
             double jx = (random.nextDouble() - 0.5) * 0.018, jz = (random.nextDouble() - 0.5) * 0.008;
             level.addParticle(ModParticles.GUNPOWDER.get(), tube.x + jx, tube.y - drop, tube.z + jz,
                     belt.x, -0.05 - random.nextDouble() * 0.02, belt.z);
         }
-        // and a small poof of smoke: half out of the tube's mouth, puffing down, half kicked up out of the casing's
-        // mouth as the powder lands, both spreading sideways and riding along with the casing
+        // half the smoke puffs down from the tube, half up out of the casing
         for (int i = 0; i < SMOKE_WISPS; i++) {
             boolean fromCasing = i % 2 == 1;
             double vx = belt.x + (random.nextDouble() - 0.5) * 0.03, vz = belt.z + (random.nextDouble() - 0.5) * 0.03;
@@ -165,6 +164,9 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
     }
 
+    // ---- Interaction ----
+
+    // Casings dropped onto the start of the belt go onto it
     @Override
     public void onEntityCollision(IMultiblockContext<State> ctx, BlockPos posInMultiblock, Entity entity) {
         Level level = ctx.getLevel().getRawLevel();
@@ -179,6 +181,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
     }
 
+    // Right-clicking either front screen opens the GUI
     @Override
     public InteractionResult click(IMultiblockContext<State> ctx, BlockPos posInMultiblock, Player player,
                                    InteractionHand hand, BlockHitResult absoluteHit, boolean isClient) {
@@ -192,12 +195,13 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         return InteractionResult.SUCCESS;
     }
 
-    /** The gunpowder hopper: one slot, gunpowder only. Shared with the GUI's client side so it filters the same. */
+    // ---- Hoppers, capabilities and drops ----
+
+    // One-slot hoppers; the GUI's client side builds the same ones so it filters items the same way
     static ItemStackHandler gunpowderSlot(Runnable markDirty) {
         return slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
     }
 
-    /** The projectile hopper: one slot, projectiles only. */
     static ItemStackHandler projectileSlot(Runnable markDirty) {
         return slot(markDirty, stack -> stack.is(ModTags.PROJECTILES));
     }
@@ -235,13 +239,15 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         drop.accept(state.projectiles.getStackInSlot(0).copy());
     }
 
+    // The belt row is a low slab so dropped items can land on it
     @Override
     public Function<BlockPos, VoxelShape> shapeGetter(ShapeType forType) {
         return pos -> pos.getY() == 1 && pos.getZ() == 1
-                ? Shapes.box(0, 0, 0, 1, 0.125, 1)   // the belt, so items can land on it
+                ? Shapes.box(0, 0, 0, 1, 0.125, 1)
                 : Shapes.block();
     }
 
+    /** The machine's saved and synced state: the belt, the two hoppers, the energy buffer and what the client shows. */
     public static class State implements IMultiblockState, ProcessContextInWorld<AmmoAssemblyRecipe> {
         public final RSState rsState = RSState.enabledByDefault();
         public final MultiblockProcessor<AmmoAssemblyRecipe, ProcessContextInWorld<AmmoAssemblyRecipe>> processor;
@@ -250,13 +256,11 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         final IItemHandler casingInput;
         private final AveragingEnergyStorage energy = new AveragingEnergyStorage(ENERGY_CAPACITY);
         private final DroppingMultiblockOutput output;
-        // Synced: whether the machine is working (runs the client's belt)
+
+        // Synced to the client: working (runs its belt), powered (the front lamp), and the hoppers' contents (the
+        // feeder's projectile and the front screens)
         private boolean active;
-        // Synced: whether it has any energy stored, which lights the power lamp on the front (it keeps working off
-        // its buffer, so the lamp stays lit until that runs dry)
         private boolean powered;
-        // Synced copies of what's in the two hoppers, as of the last sync: the client runs the belt by them, the
-        // feeder's jaws hold one of the projectiles, and the front screens show the counts
         ItemStack shownGunpowder = ItemStack.EMPTY, shownProjectiles = ItemStack.EMPTY;
         private int ticksSinceSync;
         // Client only: casings filled so far, which turns the powder handwheel
@@ -281,7 +285,9 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             projectileCap = new StoredCapability<>(projectiles);
         }
 
-        /** Takes the gunpowder (or projectile) for a recipe out of its hopper. Returns false if there isn't enough. */
+        // ---- Belt rules ----
+
+        /** Takes a recipe's gunpowder or projectile from its hopper; false if there isn't enough. */
         boolean take(ItemStackHandler from, IngredientWithSize what, boolean simulate) {
             ItemStack stack = from.getStackInSlot(0);
             if (!what.test(stack) || stack.getCount() < what.getCount()) return false;
@@ -289,7 +295,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             return true;
         }
 
-        // Stops a casing from catching up to the one in front of it while that one waits at a station
+        // A casing can't catch up to the one ahead while that one waits at a station
         @Override
         public boolean additionalCanProcessCheck(MultiblockProcess<AmmoAssemblyRecipe, ?> process, Level level) {
             List<? extends MultiblockProcess<AmmoAssemblyRecipe, ?>> queue = processor.getQueue();
@@ -310,7 +316,9 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             output.insertOrDrop(result, level);
         }
 
-        /** Server: what the belt is held up waiting for (the first casing stopped at a station), or EMPTY. */
+        // ---- GUI actions (server) ----
+
+        /** What a jammed belt is waiting for: the first casing held up at a station, or EMPTY. */
         ItemStack waitingFor(Level level) {
             for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
                 if (process instanceof AssemblyProcess casing) {
@@ -323,9 +331,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
 
         /**
-         * Server: takes every casing that hasn't reached the press off the belt and gives the player what it's made of
-         * so far (casing, gunpowder, projectile), into their inventory or at their feet if it's full. Rounds at the
-         * press finish as normal. Returns whether anything was taken.
+         * Clear Belt: takes every casing that hasn't reached the press off the belt and gives its parts back to the
+         * player (or drops them at their feet). Returns whether anything was taken.
          */
         boolean clearBelt(Level level, Player player) {
             Set<Long> cleared = new HashSet<>();
@@ -344,6 +351,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             return true;
         }
 
+        // ---- Client view ----
+
         public boolean isPowered() {
             return powered;
         }
@@ -360,12 +369,12 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             return !shownProjectiles.isEmpty();
         }
 
-        /** Client: the gunpowder hopper's contents, as of the last sync. Don't modify. */
+        /** The gunpowder hopper's contents as of the last sync. Don't modify. */
         public ItemStack shownGunpowder() {
             return shownGunpowder;
         }
 
-        /** Client: the projectile hopper's contents, as of the last sync. Don't modify. */
+        /** The projectile hopper's contents as of the last sync. Don't modify. */
         public ItemStack shownProjectiles() {
             return shownProjectiles;
         }
@@ -373,6 +382,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public int clientFills() {
             return clientFills;
         }
+
+        // ---- Saving and syncing ----
 
         @Override
         public void writeSaveNBT(CompoundTag nbt) {
@@ -399,9 +410,9 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(new CompoundTag()));
         }
 
+        // Casings the client is already running keep their place unless they've drifted (see keepClientProgress)
         @Override
         public void readSyncNBT(CompoundTag nbt) {
-            // Casings the client is already running keep their place unless they have drifted (see keepClientProgress)
             Map<Long, AssemblyProcess> running = new HashMap<>();
             for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
                 if (process instanceof AssemblyProcess casing) running.put(casing.id(), casing);
@@ -416,7 +427,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         }
     }
 
-    /** Casings put onto the start of the belt by hand, conveyor or hopper. One casing per process. */
+    /** The belt's input: each casing inserted (by hand, conveyor or hopper) starts its own process. */
     private record CasingInput(Supplier<Level> level, State state) implements IItemHandler {
         @Override
         public int getSlots() {

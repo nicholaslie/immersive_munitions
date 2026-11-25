@@ -23,9 +23,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.List;
 
 /**
- * With our icon pack enabled, TaCZ rounds in the world (dropped, held, on conveyors) are drawn as flat items
- * using our round art, like every other item, instead of TaCZ's 3D ammo model. Inventory icons and everything
- * with the pack disabled stay TaCZ's own rendering.
+ * With our icon pack on, TaCZ rounds in the world (dropped, held, on conveyors) are drawn as flat items with our art
+ * instead of TaCZ's 3D model. Inventory icons, and everything with the pack off, stay TaCZ's.
  */
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
@@ -74,7 +73,7 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
         }
 
         pose.pushPose();
-        // We're inside TaCZ's item model, already shifted to the corner; go back to the center for a normal item render
+        // we're inside TaCZ's item model, shifted to the corner; move back to the centre
         pose.translate(0.5, 0.5, 0.5);
         if (context.firstPerson()) pose.scale(2, 2, 2);   // TaCZ's model halves first-person items
         boolean leftHand = context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND

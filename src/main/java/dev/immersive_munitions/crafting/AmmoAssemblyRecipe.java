@@ -26,8 +26,7 @@ public class AmmoAssemblyRecipe extends MultiblockRecipe {
     public final IngredientWithSize gunpowder;
     public final String ammoId;
     public final int count;
-    // Leave the projectile off the casing on the belt between the feeder and the press (shot shells, whose wad and
-    // shot go inside the hull, look wrong with the projectile sprite sitting on top)
+    // Don't draw the projectile on the casing between feeder and press (shotshells: the shot goes inside the hull)
     public final boolean hideProjectile;
     private final int time;
     private final int energy;

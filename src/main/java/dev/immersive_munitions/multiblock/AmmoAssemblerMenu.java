@@ -22,25 +22,24 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * The Ammunition Assembler's GUI, opened from either front screen: its stored energy, the gunpowder and projectile
- * hoppers as two slots the player can fill and empty, what a jammed belt is waiting for, and Clear Belt. Built on IE's
- * container menu, so shift-clicking, the data sync and screen messages work like IE's machines.
+ * The Ammunition Assembler's GUI menu: stored energy, the two hopper slots, the jam message and Clear Belt. Built on
+ * IE's container menu, so shift-clicking and data sync work like IE's machines.
  */
 public class AmmoAssemblerMenu extends IEContainerMenu {
-    // Slot positions; the background (art/gui/AssemblerGui.java) draws their frames at these
+    // Slot positions (must match art/gui/AssemblerGui.java) and the Clear Belt message key
     public static final int GUNPOWDER_X = 56, PROJECTILE_X = 92, SLOT_Y = 34;
     public static final int GUNPOWDER_SLOT = 0, PROJECTILE_SLOT = 1;
-    // Screen -> server: the Clear Belt button
     public static final String CLEAR_BELT = "clear_belt";
 
     public final IMutableEnergyStorage energy;
     private final Player player;
-    // Server only: takes the unfinished casings off the belt for a player
+    // Server only
     @Nullable
     private final Consumer<Player> clearBelt;
-    // Synced: the item a jammed belt is waiting for, as its registry id (-1 when it isn't jammed)
+    // Synced: registry id of the item a jammed belt needs, -1 if not jammed
     private int waitingFor = -1;
 
+    // The server's menu works on the machine itself; the client's starts empty and is filled in by IE's data sync
     public static AmmoAssemblerMenu makeServer(int id, Inventory player, MultiblockMenuContext<State> ctx) {
         IMultiblockContext<State> mb = ctx.mbContext();
         State state = mb.getState();
@@ -72,6 +71,7 @@ public class AmmoAssemblerMenu extends IEContainerMenu {
         this.energy = energy;
         this.player = player.player;
         this.clearBelt = clearBelt;
+        // the two hoppers, then the player's inventory and hotbar
         addSlot(new SlotItemHandler(gunpowder, 0, GUNPOWDER_X, SLOT_Y));
         addSlot(new SlotItemHandler(projectiles, 0, PROJECTILE_X, SLOT_Y));
         ownSlotCount = 2;
@@ -86,7 +86,7 @@ public class AmmoAssemblerMenu extends IEContainerMenu {
         addGenericData(GenericContainerData.int32(waiting != null ? waiting : () -> waitingFor, v -> waitingFor = v));
     }
 
-    /** Client: the item a jammed belt is waiting for, or EMPTY if it isn't jammed. */
+    /** Client: the item a jammed belt is waiting for, or EMPTY. */
     public ItemStack waitingFor() {
         return waitingFor < 0 ? ItemStack.EMPTY : new ItemStack(BuiltInRegistries.ITEM.byId(waitingFor));
     }

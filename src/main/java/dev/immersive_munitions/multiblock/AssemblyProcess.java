@@ -19,17 +19,18 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 
 /**
- * One casing riding the belt. It stops under the filler until it gets its gunpowder,
- * then under the feeder until it gets its projectile, then the press seats it into the finished round.
+ * One casing on the belt. It waits under the powder station for its gunpowder, under the feeder for its projectile,
+ * and then the press turns it into the finished round.
  */
 public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe> {
-    // How far (in ticks) the client's belt may be from a sync before it gives way to the server's
+    // How many ticks the client's belt may be off from a sync before it takes the server's position
     private static final int MAX_CLIENT_DRIFT = 2;
 
-    // Tells this casing apart from the others across syncs, so the client can keep its own place on the belt
+    // id tells casings apart across syncs; moving (client only) lets the renderer interpolate
     private final long id;
     private boolean filled;
     private boolean placed;
+    private transient boolean moving;
 
     public AssemblyProcess(AmmoAssemblyRecipe recipe, NonNullList<ItemStack> casing) {
         super(recipe, AmmoAssemblerLogic.PRESS_POINT, casing);
@@ -47,52 +48,6 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         return id;
     }
 
-    /**
-     * Client only, on a sync: this is the server's copy of a casing the client was already running. The server's
-     * numbers are a tick or so old by the time they arrive, so unless the two have drifted apart, keep the client's
-     * place (and its interpolation) rather than jumping the casing back.
-     */
-    void keepClientProgress(AssemblyProcess client) {
-        if (Math.abs(client.processTick - processTick) > MAX_CLIENT_DRIFT) return;
-        processTick = client.processTick;
-        filled = client.filled;
-        placed = client.placed;
-        moving = client.moving;
-    }
-
-    /** What this casing is held up at its station waiting for (its gunpowder or projectile), or null if it isn't. */
-    @Nullable
-    IngredientWithSize waitingFor(State state, Level level) {
-        AmmoAssemblyRecipe recipe = getRecipe(level);
-        if (recipe == null) return null;
-        if (reachesFill(level) && !state.take(state.gunpowder, recipe.gunpowder, true)) return recipe.gunpowder;
-        if (reachesPlace(level) && !state.take(state.projectiles, recipe.projectile, true)) return recipe.projectile;
-        return null;
-    }
-
-    /** Whether it hasn't reached the press yet, so it can still be taken back apart (Clear Belt). */
-    boolean beforePress(Level level) {
-        return processTick < AmmoAssemblerLogic.PRESS_POINT * getMaxTicks(level);
-    }
-
-    /** What it's made of so far: the casing, plus its gunpowder once filled and its projectile once placed. */
-    List<ItemStack> parts(Level level) {
-        List<ItemStack> parts = new ArrayList<>();
-        if (!inputItems.isEmpty()) parts.add(inputItems.get(0).copy());
-        AmmoAssemblyRecipe recipe = getRecipe(level);
-        if (recipe != null) {
-            if (filled) parts.add(example(recipe.gunpowder));
-            if (placed) parts.add(example(recipe.projectile));
-        }
-        parts.removeIf(ItemStack::isEmpty);
-        return parts;
-    }
-
-    private static ItemStack example(IngredientWithSize ingredient) {
-        ItemStack[] stacks = ingredient.getMatchingStacks();
-        return stacks.length == 0 ? ItemStack.EMPTY : stacks[0].copy();
-    }
-
     public boolean isFilled() {
         return filled;
     }
@@ -100,6 +55,12 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     public boolean isPlaced() {
         return placed;
     }
+
+    public boolean isMoving() {
+        return moving;
+    }
+
+    // ---- Server ----
 
     @Override
     public boolean canProcess(ProcessContextInWorld<AmmoAssemblyRecipe> context, Level level) {
@@ -131,10 +92,52 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         super.doProcessTick(context, level);
     }
 
-    /**
-     * Client only: moves the casing one tick along, by the same rules the server uses, so the belt runs smoothly
-     * between syncs. Returns whether it moved. The server's next sync corrects any drift.
-     */
+    // True on the tick the casing would move onto a station that hasn't served it yet
+    private boolean reachesFill(Level level) {
+        return !filled && processTick + 1 >= AmmoAssemblerLogic.FILL_POINT * getMaxTicks(level);
+    }
+
+    private boolean reachesPlace(Level level) {
+        return !placed && processTick + 1 >= AmmoAssemblerLogic.PLACE_POINT * getMaxTicks(level);
+    }
+
+    // ---- GUI: jam message and Clear Belt ----
+
+    /** What this casing is waiting for at its station (gunpowder or projectile), or null. */
+    @Nullable
+    IngredientWithSize waitingFor(State state, Level level) {
+        AmmoAssemblyRecipe recipe = getRecipe(level);
+        if (recipe == null) return null;
+        if (reachesFill(level) && !state.take(state.gunpowder, recipe.gunpowder, true)) return recipe.gunpowder;
+        if (reachesPlace(level) && !state.take(state.projectiles, recipe.projectile, true)) return recipe.projectile;
+        return null;
+    }
+
+    boolean beforePress(Level level) {
+        return processTick < AmmoAssemblerLogic.PRESS_POINT * getMaxTicks(level);
+    }
+
+    /** The casing plus whatever it has received so far (gunpowder, projectile). */
+    List<ItemStack> parts(Level level) {
+        List<ItemStack> parts = new ArrayList<>();
+        if (!inputItems.isEmpty()) parts.add(inputItems.get(0).copy());
+        AmmoAssemblyRecipe recipe = getRecipe(level);
+        if (recipe != null) {
+            if (filled) parts.add(example(recipe.gunpowder));
+            if (placed) parts.add(example(recipe.projectile));
+        }
+        parts.removeIf(ItemStack::isEmpty);
+        return parts;
+    }
+
+    private static ItemStack example(IngredientWithSize ingredient) {
+        ItemStack[] stacks = ingredient.getMatchingStacks();
+        return stacks.length == 0 ? ItemStack.EMPTY : stacks[0].copy();
+    }
+
+    // ---- Client belt ----
+
+    /** Moves the casing one tick by the server's rules, so the belt runs smoothly between syncs. */
     boolean tickClient(State state, Level level, boolean canMove) {
         moving = false;
         int max = getMaxTicks(level);
@@ -153,21 +156,19 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         return true;
     }
 
-    /** Client only: whether the casing moved on the last tick, so the renderer can interpolate. */
-    public boolean isMoving() {
-        return moving;
+    /**
+     * On a sync: the server's numbers arrive a tick or so late, so keep the client's own position (and interpolation)
+     * unless the two have drifted apart.
+     */
+    void keepClientProgress(AssemblyProcess client) {
+        if (Math.abs(client.processTick - processTick) > MAX_CLIENT_DRIFT) return;
+        processTick = client.processTick;
+        filled = client.filled;
+        placed = client.placed;
+        moving = client.moving;
     }
 
-    private transient boolean moving;
-
-    // True on the tick the casing would move onto a station it hasn't been served by yet
-    private boolean reachesFill(Level level) {
-        return !filled && processTick + 1 >= AmmoAssemblerLogic.FILL_POINT * getMaxTicks(level);
-    }
-
-    private boolean reachesPlace(Level level) {
-        return !placed && processTick + 1 >= AmmoAssemblerLogic.PLACE_POINT * getMaxTicks(level);
-    }
+    // ---- Saving ----
 
     @Override
     public void writeExtraDataToNBT(CompoundTag nbt) {

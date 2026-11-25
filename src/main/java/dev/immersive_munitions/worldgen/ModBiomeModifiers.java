@@ -7,6 +7,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+/** Biome modifier serializers (zinc ore generation). */
 public final class ModBiomeModifiers {
     public static final DeferredRegister<Codec<? extends BiomeModifier>> SERIALIZERS =
             DeferredRegister.create(ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, ImmersiveMunitions.MODID);

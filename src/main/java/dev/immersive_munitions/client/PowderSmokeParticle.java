@@ -14,10 +14,7 @@ import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-/**
- * A wisp of the small smoke poof that comes out of the Ammunition Assembler's drop tube with each pour: it slows
- * quickly, breaks up (vanilla's poof sprites, played by age) and fades.
- */
+/** A wisp of smoke from the Ammunition Assembler's powder pour: it slows, breaks up and fades. */
 public class PowderSmokeParticle extends TextureSheetParticle {
     private final SpriteSet sprites;
 

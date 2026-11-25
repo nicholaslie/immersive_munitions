@@ -14,11 +14,7 @@ import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-/**
- * A grain of gunpowder in the short stream the Ammunition Assembler's drop tube pours into a casing: a small dark
- * speck falling fast, carried along at the given (belt) speed, gone within a few ticks, by when it is inside the
- * casing.
- */
+/** A grain of gunpowder poured by the Ammunition Assembler: a dark speck that falls into the casing and vanishes. */
 public class GunpowderParticle extends TextureSheetParticle {
     GunpowderParticle(ClientLevel level, double x, double y, double z, double vx, double vy, double vz) {
         super(level, x, y, z);

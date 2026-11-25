@@ -17,9 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Casings, projectiles and casing molds show their caliber label only in inventories. Their item model uses the
- * plain sprite; for GUI rendering we swap in the labeled model from models/item/labeled/ (both written by
- * art/labels/Labels.java). Dropped, held, framed and on the assembler's belt they stay unlabeled.
+ * Caliber labels in inventories only: casings, projectiles and molds use their plain model everywhere except the GUI,
+ * where the labeled one from models/item/labeled/ is swapped in (both made by art/labels/Labels.java).
  */
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class LabeledItemModels {

@@ -26,16 +26,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * The Ammunition Assembler's GUI: IE's look (background remixed from IE's GUI art by art/gui/AssemblerGui.java), IE's
- * energy gauge, the gunpowder and projectile slots (which name themselves when empty), a red line saying what a jammed
- * belt is waiting for, and Clear Belt, which hands the unfinished casings back to the player.
+ * The Ammunition Assembler's GUI screen: IE's energy gauge, the two hopper slots, the jam message and the Clear Belt
+ * button, on a background made by art/gui/AssemblerGui.java.
  */
 public class AmmoAssemblerScreen extends IEContainerScreen<AmmoAssemblerMenu> {
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(ImmersiveMunitions.MODID, "textures/gui/ammo_assembler.png");
     private static final String LANG = "gui.immersive_munitions.ammo_assembler";
-    // Layout, matching the background: title 3px under the 6px border, the jam line centred over the slots, the button
-    // under them, the gauge inside its frame at 155,11
+    // Layout, matching the background image
     private static final int TITLE_Y = 9, JAM_Y = 20, SLOTS_CENTRE_X = 82;
     private static final int BUTTON_X = 50, BUTTON_Y = 53, BUTTON_W = 64, BUTTON_H = 16;
     private static final int GAUGE_X = 157, GAUGE_Y = 13;

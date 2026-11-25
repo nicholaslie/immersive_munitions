@@ -14,9 +14,8 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 /**
- * JEI support, loaded by JEI itself (through @JeiPlugin) only when JEI is installed; nothing else in the mod refers to
- * this package, so the mod runs without JEI. The press, workbench and crafting recipes already show through IE's and
- * JEI's own categories; this adds the Ammunition Assembler's.
+ * JEI support: adds the Ammunition Assembler's recipes. JEI loads this only when it's installed, and nothing else in
+ * the mod uses this package, so JEI stays optional.
  */
 @JeiPlugin
 public class ImmersiveMunitionsJei implements IModPlugin {

@@ -10,20 +10,24 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
 
-/*
+/**
+ * Reads and syncs Ammunition Assembler recipes:
+ * <pre>
  * {
  *   "type": "immersive_munitions:ammo_assembly",
  *   "casing": {"item": "immersive_munitions:empty_casing_9mm"},
  *   "projectile": {"item": "immersive_munitions:projectile_9mm"},
  *   "gunpowder": {"tag": "forge:gunpowder"},
  *   "result": {"ammo": "9mm", "count": 1},
- *   "time": 60, "energy": 1200,       (optional)
- *   "hide_projectile": true           (optional: no projectile drawn on the casing after the feeder, e.g. 12g)
+ *   "time": 60, "energy": 1200,     optional
+ *   "hide_projectile": true         optional: don't draw the projectile on the casing (12g)
  * }
+ * </pre>
  */
 public class AmmoAssemblySerializer extends IERecipeSerializer<AmmoAssemblyRecipe> {
-    private static final int DEFAULT_TIME = 60;      // ticks for one casing to cross the belt
-    private static final int DEFAULT_ENERGY = 1200;  // per round: 20 FE/t per casing, 160 FE/t with a full belt
+    // Ticks for a casing to cross the belt, and energy per round
+    private static final int DEFAULT_TIME = 60;
+    private static final int DEFAULT_ENERGY = 1200;
 
     @Override
     public ItemStack getIcon() {
