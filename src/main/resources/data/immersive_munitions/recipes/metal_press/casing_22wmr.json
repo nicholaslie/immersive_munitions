@@ -1,6 +1,6 @@
 {
   "type": "immersiveengineering:metal_press",
-  "input": {"tag": "forge:rods/brass"},
+  "input": {"tag": "forge:ingots/brass"},
   "mold": "immersive_munitions:mold_casing_22wmr",
   "result": {"item": "immersive_munitions:empty_casing_22wmr", "count": 4},
   "energy": 2400

@@ -7,6 +7,6 @@
     "p": {"item": "minecraft:paper"}
   },
   "pattern": [" B ", "ddd", "ppp"],
-  "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "casing_molds"}},
+  "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "pistol_casing_molds"}},
   "show_notification": true
 }
