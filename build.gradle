@@ -62,6 +62,11 @@ repositories {
     flatDir {
         dir 'libs'
     }
+    // JEI, only for looking up recipes in the dev game
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+    }
 }
 
 dependencies {
@@ -71,6 +76,12 @@ dependencies {
     // Only used in the dev environment; players install IE and TaCZ themselves.
     implementation fg.deobf("blank:ImmersiveEngineering:${ie_version}")
     implementation fg.deobf("blank:tacz-forge:${tacz_version}")
+
+    // JEI: we compile against its API only (client/jei, our recipes in JEI when it's installed; optional for players),
+    // and run the full mod in the dev game
+    compileOnly fg.deobf("mezz.jei:jei-1.20.1-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-1.20.1-forge-api:${jei_version}")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {

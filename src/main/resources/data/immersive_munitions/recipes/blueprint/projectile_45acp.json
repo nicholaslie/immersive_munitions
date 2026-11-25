@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "pistol_projectiles",
+  "inputs": [
+    {"tag": "forge:plates/copper"},
+    {"tag": "forge:wires/lead"}
+  ],
+  "result": {"item": "immersive_munitions:projectile_45acp", "count": 2}
+}

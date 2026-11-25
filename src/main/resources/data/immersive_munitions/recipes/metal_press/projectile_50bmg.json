@@ -1,7 +1,0 @@
-{
-  "type": "immersiveengineering:metal_press",
-  "input": {"tag": "forge:ingots/lead"},
-  "mold": "immersive_munitions:mold_casing_50bmg",
-  "result": {"item": "immersive_munitions:projectile_50bmg", "count": 1},
-  "energy": 2400
-}

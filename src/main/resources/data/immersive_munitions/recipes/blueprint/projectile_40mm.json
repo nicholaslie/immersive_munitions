@@ -1,0 +1,11 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "grenade_projectiles",
+  "inputs": [
+    {"tag": "forge:plates/steel"},
+    {"tag": "forge:plates/copper"},
+    {"item": "immersiveengineering:component_iron"},
+    {"tag": "forge:gunpowder"}
+  ],
+  "result": {"item": "immersive_munitions:projectile_40mm", "count": 1}
+}

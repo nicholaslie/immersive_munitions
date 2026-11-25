@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.0.9-alpha (2026-11-25)
+
+Projectiles are now assembled like real bullets, and the 40mm grenade is closer to the real thing. JEI shows everything.
+
+- **Projectiles are made on IE's Engineer's Workbench** (or the Automated Engineer's Workbench, for factories), from new blueprints. Instead of pressing lead, each bullet is a lead core in a copper jacket:
+  - small pistol calibers: copper plate + lead wire → 2
+  - .50 AE and .500 Magnum: copper plate + 2 lead wire → 3
+  - rifles: copper plate + lead wire → 1
+  - .338 Lapua and .50 BMG: copper plate + 2 lead wire → 1
+  - 12 Gauge: lead wire → 1 (bare lead shot)
+  - 40mm: steel plate + copper plate + Iron Mechanical Component + gunpowder → 1 warhead (steel body, copper shaped-charge liner, fuze and high explosive)
+
+  Lead wire and copper plates are IE's own, made in the metal press. Each projectile uses the same amount of lead as before.
+- **Five projectile blueprints:** Pistol, Rifle, Heavy, Shotgun and Grenade Projectiles. They're crafted like the mold blueprints, but with **copper plates** instead of brass on the top row.
+- The molds now press **casings only**.
+- The **40mm grenade casing is aluminium**, as on real 40mm grenade cartridges. It's pressed from an aluminium ingot and has a new silver texture, on the empty casing and on the finished round's case. In a cartridge, the Ammunition Assembler's gunpowder is the propellant; the grenade's explosive is in its warhead.
+- **JEI support:** with JEI installed, the Ammunition Assembler has its own JEI tab showing every caliber's recipe, with its energy and time. The press, workbench and blueprint recipes show in IE's and JEI's own tabs. JEI is optional.
+
 ## 0.0.8-alpha (2026-11-25)
 
 Projectiles can now be made, which completes the ammo factory: press the casings and projectiles, then put them through the Ammunition Assembler.

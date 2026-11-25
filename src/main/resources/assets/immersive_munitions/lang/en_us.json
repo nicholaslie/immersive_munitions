@@ -103,6 +103,11 @@
   "desc.immersiveengineering.info.blueprint.heavy_casing_molds": "Heavy Molds",
   "desc.immersiveengineering.info.blueprint.shotgun_casing_molds": "Shotgun Molds",
   "desc.immersiveengineering.info.blueprint.grenade_casing_molds": "Grenade Molds",
+  "desc.immersiveengineering.info.blueprint.pistol_projectiles": "Pistol Projectiles",
+  "desc.immersiveengineering.info.blueprint.rifle_projectiles": "Rifle Projectiles",
+  "desc.immersiveengineering.info.blueprint.heavy_projectiles": "Heavy Projectiles",
+  "desc.immersiveengineering.info.blueprint.shotgun_projectiles": "Shotgun Projectiles",
+  "desc.immersiveengineering.info.blueprint.grenade_projectiles": "Grenade Projectiles",
   "gui.immersive_munitions.ammo_assembler": "Ammunition Assembler",
   "gui.immersive_munitions.ammo_assembler.gunpowder": "Gunpowder",
   "gui.immersive_munitions.ammo_assembler.projectiles": "Projectiles",
@@ -110,5 +115,6 @@
   "gui.immersive_munitions.ammo_assembler.clear_belt": "Clear Belt",
   "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_1": "Returns unfinished casings, with",
   "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_2": "their gunpowder and projectiles,",
-  "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_3": "to your inventory"
+  "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_3": "to your inventory",
+  "jei.immersive_munitions.ammo_assembly.cost": "%s IF per round, %ss"
 }
