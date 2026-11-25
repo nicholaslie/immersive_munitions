@@ -1,0 +1,7 @@
+{
+  "type": "immersiveengineering:metal_press",
+  "input": {"tag": "forge:ingots/steel"},
+  "mold": "immersive_munitions:mold_casing_40mm",
+  "result": {"item": "immersive_munitions:projectile_40mm", "count": 1},
+  "energy": 2400
+}

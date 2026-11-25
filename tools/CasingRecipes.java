@@ -5,13 +5,15 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /*
- * Writes the recipes that make empty casings, all IE data, no code:
- *   - metal press: a brass ingot (forge:ingots/brass) pressed in a caliber's casing mold gives that caliber's casings,
- *     like IE's copper ingot to casings; the yield goes by casing size (YIELD below)
- *   - Engineer's Workbench: each casing mold from 3 steel plates and a wire cutter, like IE's own molds, on one of
- *     three blueprints (BLUEPRINTS below). IE's workbench only has room for about 12 recipes per blueprint (20 dynamic
+ * Writes the recipes that make cartridge parts, all IE data, no code:
+ *   - metal press: each caliber's mold presses a brass ingot (forge:ingots/brass) into that caliber's casings, like
+ *     IE's copper ingot to casings, and a lead ingot (forge:ingots/lead) into its projectiles; the 40mm grenade's
+ *     warhead is pressed from steel (STEEL_PROJECTILES). Yields go by size (YIELD below), the same for both parts
+ *   - Engineer's Workbench: each mold from 3 steel plates and a wire cutter, like IE's own molds, on one of
+ *     five blueprints (BLUEPRINTS below). IE's workbench only has room for about 12 recipes per blueprint (20 dynamic
  *     slots: the blueprint, 6 inputs, the outputs; more than that shifts the slot ids and crashes the client), so the
  *     molds are split by gun type and each blueprint must stay at 12 or fewer
  *   - crafting: each blueprint itself, IE's Molds blueprint pattern with brass plates on top, in a different
@@ -25,7 +27,8 @@ public class CasingRecipes {
     static final int PRESS_ENERGY = 2400;    // IE's own press recipes
     static final int MAX_PER_BLUEPRINT = 12; // IE's workbench limit (see above)
 
-    // Casings per brass ingot, by casing size: small pistol 4, big pistol 3, rifle and shotgun 2, heavy 1
+    // Casings per brass ingot (and projectiles per lead ingot), by size: small pistol 4, big pistol 3, rifle and shotgun 2,
+    // heavy 1
     static final Map<String, Integer> YIELD = new LinkedHashMap<>();
     static {
         for (String c : new String[]{"9mm", "45acp", "357mag", "762x25", "22wmr", "57x28", "46x30"}) YIELD.put(c, 4);
@@ -35,7 +38,11 @@ public class CasingRecipes {
         for (String c : new String[]{"338", "50bmg", "40mm"}) YIELD.put(c, 1);
     }
 
-    // Blueprint category -> its top crafting row (B = brass plate) and the molds on it
+    // Projectiles pressed from steel, not lead: the 40mm grenade's warhead
+    static final Set<String> STEEL_PROJECTILES = Set.of("40mm");
+
+    // Blueprint category -> its top crafting row (B = brass plate) and the molds on it. The ids say "casing_molds" from
+    // before the molds made projectiles too; kept so blueprints already crafted keep working
     record Blueprint(String category, String topRow, List<String> calibers) {}
     static final List<Blueprint> BLUEPRINTS = List.of(
             new Blueprint("pistol_casing_molds", " B ",
@@ -44,7 +51,11 @@ public class CasingRecipes {
                     List.of("556x45", "545x39", "762x39", "300blk", "58x42", "308", "762x54", "68x51fury", "792x57",
                             "30_06", "45_70")),
             new Blueprint("heavy_casing_molds", "BBB",
-                    List.of("12g", "338", "50bmg", "40mm")));
+                    List.of("338", "50bmg")),
+            new Blueprint("shotgun_casing_molds", "B  ",
+                    List.of("12g")),
+            new Blueprint("grenade_casing_molds", "BB ",
+                    List.of("40mm")));
 
     public static void main(String[] args) throws IOException {
         int n = 0;
@@ -59,7 +70,19 @@ public class CasingRecipes {
                       "energy": %d
                     }
                     """.formatted(MOD, c, MOD, c, e.getValue(), PRESS_ENERGY));
-            n++;
+            // the same mold presses the projectiles: from lead, or steel for the 40mm grenade's warhead (its explosive
+            // filling is the gunpowder the Ammunition Assembler adds)
+            write("metal_press/projectile_" + c, """
+                    {
+                      "type": "immersiveengineering:metal_press",
+                      "input": {"tag": "%s"},
+                      "mold": "%s:mold_casing_%s",
+                      "result": {"item": "%s:projectile_%s", "count": %d},
+                      "energy": %d
+                    }
+                    """.formatted(STEEL_PROJECTILES.contains(c) ? "forge:ingots/steel" : "forge:ingots/lead",
+                    MOD, c, MOD, c, e.getValue(), PRESS_ENERGY));
+            n += 2;
         }
         int molds = 0;
         for (Blueprint bp : BLUEPRINTS) {

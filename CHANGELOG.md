@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.0.8-alpha (2026-11-25)
+
+Projectiles can now be made, which completes the ammo factory: press the casings and projectiles, then put them through the Ammunition Assembler.
+
+- Each caliber's mold now makes both parts of the cartridge in IE's metal press:
+  - brass ingot → casings
+  - lead ingot → projectiles
+  - steel ingot → 40mm grenade warhead (its explosive filling is the gunpowder the Ammunition Assembler adds)
+
+  Projectiles come in the same numbers as casings, so one ingot of each makes a matching set.
+- Molds are renamed after their caliber, e.g. "9mm Mold" instead of "9mm Casing Mold".
+- The mold blueprints are now **Pistol Molds**, **Rifle Molds**, **Heavy Molds** (.338 Lapua, .50 BMG), **Shotgun Molds** (12 Gauge) and **Grenade Molds** (40mm). The top row of their crafting recipe tells them apart:
+  - Pistol Molds: one brass plate in the middle
+  - Rifle Molds: two brass plates at the sides
+  - Heavy Molds: three brass plates across
+  - Shotgun Molds: one brass plate in a corner
+  - Grenade Molds: two brass plates side by side
+
+  Blueprints already crafted keep working. Heavy Molds no longer lists 12 Gauge or 40mm; craft the new blueprints for those.
+
 ## 0.0.7-alpha (2026-11-25)
 
 New zinc and brass textures, and fixes for the casing molds.

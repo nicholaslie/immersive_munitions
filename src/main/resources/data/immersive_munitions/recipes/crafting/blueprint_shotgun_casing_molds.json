@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {"tag": "forge:plates/brass"},
+    "d": {"tag": "forge:dyes/blue"},
+    "p": {"item": "minecraft:paper"}
+  },
+  "pattern": ["B  ", "ddd", "ppp"],
+  "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "shotgun_casing_molds"}},
+  "show_notification": true
+}
