@@ -61,12 +61,12 @@ The jar ships a resource pack, **Immersive Munitions — TaCZ Ammunition Icons**
 
 ## Regenerating materials
 
-`tools/gen_resources.py` rebuilds the zinc/brass textures, models, tags and recipes. Run it from the repo root with Python 3 and Pillow, passing the path to Scorched Guns Brass's `assets/scbrass/textures` folder:
+From the repo root:
 
-```bat
-python tools/gen_resources.py path\to\scbrass\textures
-```
+- `java art/materials/Materials.java` redraws the zinc and brass textures from IE's metal art, in this mod's palettes.
+- `python tools/gen_resources.py` rebuilds the zinc/brass models, tags, loot tables, recipes and worldgen.
+- `java tools/CasingRecipes.java` rebuilds the casing recipes (metal press, casing mold blueprints).
 
 ## Credits and license
 
-The mod's code and original art are licensed GPL-3.0-or-later; see [LICENSE](LICENSE). Some material comes from other mods: zinc/brass textures from Scorched Guns Brass (GPLv3) and creative-tab code adapted from TaCZ (GPLv3). It is also built on Immersive Engineering (Blu's License of Common Sense). [NOTICE.md](NOTICE.md) covers the details.
+The mod's code and original art are licensed GPL-3.0-or-later; see [LICENSE](LICENSE). Some material comes from other mods: creative-tab code adapted from TaCZ (GPLv3), and textures recolored from Immersive Engineering (Blu's License of Common Sense) and Immersive Geology (LGPL). [NOTICE.md](NOTICE.md) covers the details.

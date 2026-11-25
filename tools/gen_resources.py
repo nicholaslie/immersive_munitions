@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""Zinc/brass textures, models, lang entries, loot tables, recipes, tags and worldgen.
+"""Zinc/brass models, lang entries, loot tables, recipes, tags and worldgen.
 
-    python tools/gen_resources.py <Scorched Guns Brass textures dir>
+    python tools/gen_resources.py
 
-Set IE_TEX / IG_TEX to IE's and Immersive Geology's item texture folders to rebuild the
-dusts, plate, rod, wire and gear; without them the committed textures are kept.
-Ammo items (casings, projectiles, molds) are not handled here.
+The zinc/brass textures come from art/materials/Materials.java, and the zinc ores' block models are the two-layer
+overlay models (models/block/ore_overlay.json, vanilla stone or deepslate under our zinc overlay), so they are left
+alone here. Ammo items (casings, projectiles, molds) are not handled here.
 """
 import json, os, sys
-from PIL import Image
 
 MOD = "immersive_munitions"
-SB = sys.argv[1] if len(sys.argv) > 1 else "/tmp/sb/assets/scbrass/textures"
-IE_TEX = os.environ.get("IE_TEX", "/tmp/ie/assets/immersiveengineering/textures/item")
-IG_TEX = os.environ.get("IG_TEX", "/tmp/ig/assets/immersivegeology/textures/item")
 RES = "src/main/resources"
 A = f"{RES}/assets/{MOD}"
 D = f"{RES}/data/{MOD}"
@@ -22,48 +18,6 @@ def w(path, obj):
     with open(path, "w") as f:
         if isinstance(obj, str): f.write(obj)
         else: json.dump(obj, f, indent=2); f.write("\n")
-
-# ---------- textures ----------
-def lum(p): return 0.299*p[0]+0.587*p[1]+0.114*p[2]
-def ramp(img):
-    px = sorted({p[:3] for p in img.convert("RGBA").getdata() if p[3] > 0}, key=lum)
-    return px
-def remap(src, target_ramp):
-    """Map each opaque pixel of src onto target_ramp by luminance rank."""
-    src = src.convert("RGBA"); out = src.copy()
-    s_ramp = ramp(src); lo, hi = lum(s_ramp[0]), lum(s_ramp[-1])
-    for x in range(src.width):
-        for y in range(src.height):
-            r,g,b,a = src.getpixel((x,y))
-            if a == 0: continue
-            t = 0 if hi == lo else (lum((r,g,b))-lo)/(hi-lo)
-            c = target_ramp[min(len(target_ramp)-1, int(t*len(target_ramp)))]
-            out.putpixel((x,y), (*c, a))
-    return out
-def ld(rel): return Image.open(f"{SB}/{rel}").convert("RGBA")
-def save(img, rel):
-    p = f"{A}/textures/{rel}"; os.makedirs(os.path.dirname(p), exist_ok=True); img.save(p)
-
-for rel in ["block/zinc_ore","block/deepslate_zinc_ore","block/raw_zinc_block","block/zinc_block","block/brass_block",
-            "item/raw_zinc","item/zinc_ingot","item/zinc_nugget","item/brass_ingot"]:
-    save(ld(rel + ".png"), rel + ".png")            # reused as-is
-brass_ramp = ramp(ld("item/brass_ingot.png")); zinc_ramp = ramp(ld("item/zinc_ingot.png"))
-save(remap(ld("item/zinc_nugget.png"), brass_ramp), "item/brass_nugget.png")   # derived
-
-# Dusts: IE's own metal dust pile (same shape IG's metal dust uses), remapped to each metal's palette.
-for out, src_name, pal in [("brass_dust", "metal_dust_gold.png", brass_ramp), ("zinc_dust", "metal_dust_iron.png", zinc_ramp)]:
-    if os.path.exists(f"{IE_TEX}/{src_name}"):
-        save(remap(Image.open(f"{IE_TEX}/{src_name}").convert("RGBA"), pal), f"item/{out}.png")
-    else:
-        print(f"note: {IE_TEX}/{src_name} not found; keeping committed item/{out}.png")
-
-# Brass forms IE has press recipes for: IE's plate/rod/wire and IG's greyscale gear, recolored to brass.
-for out, path in [("brass_plate", f"{IE_TEX}/metal_plate_copper.png"), ("brass_rod", f"{IE_TEX}/material_stick_iron.png"),
-                  ("brass_wire", f"{IE_TEX}/material_wire_copper.png"), ("brass_gear", f"{IG_TEX}/greyscale/metal/gear.png")]:
-    if os.path.exists(path):
-        save(remap(Image.open(path).convert("RGBA"), brass_ramp), f"item/{out}.png")
-    else:
-        print(f"note: {path} not found; keeping committed item/{out}.png")
 
 # ---------- registry content ----------
 ITEMS = {"raw_zinc":"Raw Zinc","zinc_ingot":"Zinc Ingot","zinc_nugget":"Zinc Nugget","zinc_dust":"Zinc Dust",
@@ -86,7 +40,8 @@ for k in ITEMS:
     w(f"{A}/models/item/{k}.json", {"parent":"minecraft:item/generated","textures":{"layer0":f"{MOD}:item/{k}"}})
 for k in BLOCKS:
     w(f"{A}/blockstates/{k}.json", {"variants":{"":{"model":f"{MOD}:block/{k}"}}})
-    w(f"{A}/models/block/{k}.json", {"parent":"minecraft:block/cube_all","textures":{"all":f"{MOD}:block/{k}"}})
+    if not k.endswith("zinc_ore"):   # the ores use the two-layer overlay models (ore_overlay.json)
+        w(f"{A}/models/block/{k}.json", {"parent":"minecraft:block/cube_all","textures":{"all":f"{MOD}:block/{k}"}})
     w(f"{A}/models/item/{k}.json", {"parent":f"{MOD}:block/{k}"})
 w(f"{RES}/pack.mcmeta", {"pack":{"description":"Immersive Munitions resources","pack_format":15}})
 

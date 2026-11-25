@@ -1,6 +1,7 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "immersive_munitions:block/ore_overlay",
   "textures": {
-    "all": "immersive_munitions:block/deepslate_zinc_ore"
+    "base": "minecraft:block/deepslate",
+    "overlay": "immersive_munitions:block/zinc_ore_overlay"
   }
 }
