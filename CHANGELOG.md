@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.0.7-alpha (2026-11-25)
+
+New zinc and brass textures, and fixes for the casing molds.
+
+- New textures for every zinc and brass item and block, based on IE's own metal art in this mod's colours: the ingots, nuggets, raw zinc, dusts, plate, rod, wire, gear and storage blocks. The block of brass now has bands like IE's metal blocks.
+- New zinc ore, made from IE's nickel ore in blue-grey zinc. It draws Minecraft's own stone and deepslate underneath, so it matches vanilla and any resource pack that changes stone.
+- Removed all textures that came from Scorched Guns Brass.
+- Fixed a crash when taking the Casing Molds blueprint out of IE's Engineer's Workbench. The workbench only fits about 12 recipes per blueprint, so the casing molds are now on three blueprints:
+  - **Pistol Casing Molds**: brass plate in the middle of the top row
+  - **Rifle Casing Molds**: brass plates at both ends of the top row
+  - **Shotgun & Heavy Casing Molds**: brass plates across the whole top row
+
+  The old Casing Molds blueprint no longer makes anything; craft the new ones.
+- Casing molds now press **brass ingots** instead of brass rods, like IE's copper ingot to casings. The number of casings per press is unchanged.
+
 ## 0.0.6-alpha (2026-11-24)
 
 Casings can now be made in IE's metal press.
