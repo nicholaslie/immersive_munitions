@@ -2,7 +2,17 @@
 
 ## Unreleased
 
-Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.5.0-beta), only Fixed raises the last (0.4.1-beta).
+Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.6.0-beta), only Fixed raises the last (0.5.1-beta).
+
+### Added
+
+### Changed
+
+### Fixed
+
+## 0.5.0-beta (2026-11-26)
+
+The first version for Minecraft 1.21.1 (NeoForge), and louder Ammunition Assembler sounds.
 
 ### Added
 
@@ -11,8 +21,6 @@ Changes since the last release. The next version number follows from them: anyth
 ### Changed
 
 - The Ammunition Assembler's sounds are 10% louder.
-
-### Fixed
 
 ## 0.4.0-beta (2026-11-26)
 
