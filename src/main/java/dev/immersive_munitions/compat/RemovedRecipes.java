@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Switches off other mods' recipes so ammunition comes from the Ammunition Assembler (each part has a config switch,
@@ -39,6 +40,7 @@ import java.util.Set;
  * finishes its own recipes: the RecipeManager is captured when server data reloads, and filtered in TagsUpdatedEvent,
  * which fires after the reload and before recipes are sent to players. IE rebuilds its recipe caches on the same event.
  * The removed IE items stay registered (old worlds keep them) but are hidden from IE's creative tab and from JEI.
+ * Without the Immersive Armorer gun pack, every recipe for its ammo and our parts for it goes too (ArmorerCompat).
  */
 @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID)
 public final class RemovedRecipes {
@@ -67,17 +69,19 @@ public final class RemovedRecipes {
     public static void onTagsUpdated(TagsUpdatedEvent event) {
         if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD || recipeManager == null) return;
         boolean tacz = Config.REMOVE_TACZ_AMMO.get(), ie = Config.REMOVE_IE_WEAPONS.get();
-        if (!tacz && !ie) return;
+        boolean noArmorer = !ArmorerCompat.packLoaded(false);   // without the gun pack, our recipes for it go too
+        if (!tacz && !ie && !noArmorer) return;
         RegistryAccess access = event.getRegistryAccess();
         List<Recipe<?>> kept = new ArrayList<>();
         int removed = 0;
         for (Recipe<?> recipe : recipeManager.getRecipes()) {
-            if ((tacz && isTaczAmmo(recipe)) || (ie && makesIeWeaponItem(recipe, access))) removed++;
+            if ((tacz && isTaczAmmo(recipe)) || (ie && makes(recipe, access, RemovedRecipes::isIeWeaponStack))
+                    || (noArmorer && makes(recipe, access, ArmorerCompat::isArmorerStack))) removed++;
             else kept.add(recipe);
         }
         if (removed > 0) {
             recipeManager.replaceRecipes(kept);
-            LOG.info("Removed {} recipes (TaCZ ammo: {}, IE guns: {})", removed, tacz, ie);
+            LOG.info("Removed {} recipes (TaCZ ammo: {}, IE guns: {}, Immersive Armorer missing: {})", removed, tacz, ie, noArmorer);
         }
         recipeManager = null;
     }
@@ -88,13 +92,14 @@ public final class RemovedRecipes {
         return table.getOutput().getItem() instanceof IAmmo;
     }
 
-    private static boolean makesIeWeaponItem(Recipe<?> recipe, RegistryAccess access) {
+    /** Whether a recipe's output (any of them, for IE's machines) matches. */
+    private static boolean makes(Recipe<?> recipe, RegistryAccess access, Predicate<ItemStack> match) {
         try {
             if (recipe instanceof MultiblockRecipe multiblock) {
-                for (ItemStack out : multiblock.getItemOutputs()) if (isIeWeaponStack(out)) return true;
+                for (ItemStack out : multiblock.getItemOutputs()) if (match.test(out)) return true;
                 return false;
             }
-            return isIeWeaponStack(recipe.getResultItem(access));
+            return match.test(recipe.getResultItem(access));
         } catch (RuntimeException e) {   // a recipe whose output can't be resolved here is left alone
             return false;
         }

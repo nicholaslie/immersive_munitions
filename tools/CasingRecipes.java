@@ -37,10 +37,10 @@ public class CasingRecipes {
     static final Map<String, Integer> CASINGS = new LinkedHashMap<>();
     static {
         for (String c : new String[]{"9mm", "45acp", "357mag", "762x25", "22wmr", "57x28", "46x30"}) CASINGS.put(c, 4);
-        for (String c : new String[]{"50ae", "500mag"}) CASINGS.put(c, 3);
+        for (String c : new String[]{"50ae", "500mag", "454_casul"}) CASINGS.put(c, 3);
         for (String c : new String[]{"556x45", "545x39", "762x39", "300blk", "58x42", "308", "762x54", "68x51fury",
-                "792x57", "30_06", "45_70", "12g"}) CASINGS.put(c, 2);
-        for (String c : new String[]{"338", "50bmg", "40mm"}) CASINGS.put(c, 1);
+                "792x57", "30_06", "45_70", "12g", "ap_ammo"}) CASINGS.put(c, 2);
+        for (String c : new String[]{"338", "50bmg", "40mm", "20mm"}) CASINGS.put(c, 1);
     }
 
     // Projectile recipes: inputs (a tag, or "item:<id>" for one item, and a count) and how many projectiles. IE presses
@@ -57,10 +57,15 @@ public class CasingRecipes {
     static final Map<String, Projectile> PROJECTILES = new LinkedHashMap<>();
     static {
         for (String c : new String[]{"9mm", "45acp", "357mag", "762x25", "22wmr", "57x28", "46x30"}) PROJECTILES.put(c, jacketed(1, 2));
-        for (String c : new String[]{"50ae", "500mag"}) PROJECTILES.put(c, jacketed(2, 3));
+        for (String c : new String[]{"50ae", "500mag", "454_casul"}) PROJECTILES.put(c, jacketed(2, 3));
         for (String c : new String[]{"556x45", "545x39", "762x39", "300blk", "58x42", "308", "762x54", "68x51fury",
                 "792x57", "30_06", "45_70"}) PROJECTILES.put(c, jacketed(1, 1));
         for (String c : new String[]{"338", "50bmg"}) PROJECTILES.put(c, jacketed(2, 1));
+        // armor-piercing: a hardened steel core (IE's steel wire) in the copper jacket, in place of lead
+        PROJECTILES.put("ap_ammo", new Projectile(List.of(COPPER_JACKET, new Part("forge:wires/steel", 1)), 1));
+        // 20mm cannon shell: a steel body with a copper driving band, filled with high explosive (gunpowder)
+        PROJECTILES.put("20mm", new Projectile(List.of(new Part("forge:plates/steel", 1), new Part("forge:plates/copper", 1),
+                new Part("forge:gunpowder", 1)), 1));
         PROJECTILES.put("12g", new Projectile(List.of(new Part("forge:wires/lead", 1)), 1));       // bare lead shot
         // 40mm HEDP warhead, like the M433: a steel body (fragments), a copper shaped-charge liner, and a mechanical
         // impact fuze (IE's Iron Mechanical Component), filled with high explosive (gunpowder). The Ammunition
@@ -79,7 +84,9 @@ public class CasingRecipes {
                     "68x51fury", "792x57", "30_06", "45_70")),
             new GunType("heavy", "BBB", List.of("338", "50bmg")),
             new GunType("shotgun", "B  ", List.of("12g")),
-            new GunType("grenade", "BB ", List.of("40mm")));
+            new GunType("grenade", "BB ", List.of("40mm")),
+            // the Immersive Armorer gun pack's cartridges, on blueprints of their own (hidden without the pack)
+            new GunType("immersive_armorer", " BB", List.of("454_casul", "ap_ammo", "20mm")));
 
     public static void main(String[] args) throws IOException {
         int n = 0;
@@ -133,21 +140,88 @@ public class CasingRecipes {
                 molds++;
                 projectiles++;
             }
-            n += blueprintRecipe(moldCategory, type.topRow(), "forge:plates/brass");
-            n += blueprintRecipe(projectileCategory, type.topRow(), "forge:plates/copper");
+            n += blueprintRecipe(moldCategory, type.topRow(), "{\"tag\": \"forge:plates/brass\"}");
+            n += blueprintRecipe(projectileCategory, type.topRow(), "{\"tag\": \"forge:plates/copper\"}");
         }
         if (molds != CASINGS.size() || projectiles != PROJECTILES.size())
             throw new IllegalStateException("blueprints cover " + molds + " molds and " + projectiles + " projectiles, not " + CASINGS.size());
-        System.out.println("wrote " + n + " recipes for " + CASINGS.size() + " calibers on " + 2 * GUN_TYPES.size() + " blueprints");
+        n += armorerAmmo();
+        System.out.println("wrote " + n + " recipes for " + CASINGS.size() + " calibers on " + 2 * GUN_TYPES.size() + " blueprints, and the Immersive Armorer ammo");
     }
 
-    static int blueprintRecipe(String category, String topRow, String plateTag) throws IOException {
+    /*
+     * The Immersive Armorer gun pack's ammo that isn't a cartridge, made in IE's machines (yields close to the pack's
+     * own gun smith recipes, which RemovedRecipes switches off). Without the pack, RemovedRecipes drops these too.
+     *   - cut steel rods (railgun): a steel rod cut down in the Metal Press with IE's rod mold, 4 per rod
+     *   - capacitor cells (rail pistols, rail SMG, plasma gun): Engineer's Workbench, on an "energy cells" blueprint
+     *     (an electron tube on top), from glass, wire and redstone
+     *   - flammable chemical (chemical thrower): a glass bottle filled in the Bottling Machine with creosote, ethanol
+     *     or biodiesel
+     */
+    static final String ARMORER = "immersive_armorer";
+    static String ammo(String id, int count) {
+        return "{\"item\": \"tacz:ammo\", \"nbt\": \"{AmmoId:\\\"%s:%s\\\"}\", \"count\": %d}".formatted(ARMORER, id, count);
+    }
+    record Cell(String id, List<Part> inputs, int count) {}
+    static final List<Cell> CELLS = List.of(
+            new Cell("burst_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/copper", 2),
+                    new Part("forge:dusts/redstone", 3)), 5),
+            new Cell("stream_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/electrum", 2),
+                    new Part("forge:dusts/redstone", 2)), 5),
+            new Cell("high_power_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/electrum", 2),
+                    new Part("item:immersiveengineering:electron_tube", 1), new Part("forge:dusts/redstone", 3)), 3));
+    static final Map<String, Integer> CHEMICAL_FUELS = new LinkedHashMap<>();
+    static { CHEMICAL_FUELS.put("creosote", 250); CHEMICAL_FUELS.put("ethanol", 250); CHEMICAL_FUELS.put("biodiesel", 125); }
+
+    static int armorerAmmo() throws IOException {
+        int n = 0;
+        write("metal_press/cut_steel_rod", """
+                {
+                  "type": "immersiveengineering:metal_press",
+                  "input": {"tag": "forge:rods/steel"},
+                  "mold": "immersiveengineering:mold_rod",
+                  "result": %s,
+                  "energy": %d
+                }
+                """.formatted(ammo("cut_steel_rod", 4), PRESS_ENERGY));
+        n++;
+        for (Cell cell : CELLS) {
+            List<String> inputs = new ArrayList<>();
+            for (Part part : cell.inputs()) inputs.add(part.json());
+            write("blueprint/" + cell.id(), """
+                    {
+                      "type": "immersiveengineering:blueprint",
+                      "category": "energy_cells",
+                      "inputs": [
+                        %s
+                      ],
+                      "result": %s
+                    }
+                    """.formatted(String.join(",\n    ", inputs), ammo(cell.id(), cell.count())));
+            n++;
+        }
+        n += blueprintRecipe("energy_cells", " B ", "{\"item\": \"immersiveengineering:electron_tube\"}");
+        for (Map.Entry<String, Integer> fuel : CHEMICAL_FUELS.entrySet()) {
+            write("bottling/chemical_from_" + fuel.getKey(), """
+                    {
+                      "type": "immersiveengineering:bottling_machine",
+                      "input": {"item": "minecraft:glass_bottle"},
+                      "fluid": {"tag": "forge:%s", "amount": %d},
+                      "results": [%s]
+                    }
+                    """.formatted(fuel.getKey(), fuel.getValue(), ammo("chemical", 4)));
+            n++;
+        }
+        return n;
+    }
+
+    static int blueprintRecipe(String category, String topRow, String topIngredient) throws IOException {
         write("crafting/blueprint_" + category, """
                 {
                   "type": "minecraft:crafting_shaped",
                   "category": "misc",
                   "key": {
-                    "B": {"tag": "%s"},
+                    "B": %s,
                     "d": {"tag": "forge:dyes/blue"},
                     "p": {"item": "minecraft:paper"}
                   },
@@ -155,7 +229,7 @@ public class CasingRecipes {
                   "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "%s"}},
                   "show_notification": true
                 }
-                """.formatted(plateTag, topRow, category));
+                """.formatted(topIngredient, topRow, category));
         return 1;
     }
 

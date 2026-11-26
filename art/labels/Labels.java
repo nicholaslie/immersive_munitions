@@ -48,6 +48,12 @@ public class Labels {
         g('E', "####", "#...", "#...", "###.", "#...", "#...", "####");
         g('G', ".###", "#...", "#...", "#.##", "#..#", "#..#", ".###");
         g('I', "###", ".#.", ".#.", ".#.", ".#.", ".#.", "###");
+        g('O', ".##.", "#..#", "#..#", "#..#", "#..#", "#..#", ".##.");
+        g('D', "###.", "#..#", "#..#", "#..#", "#..#", "#..#", "###.");
+        g('U', "#..#", "#..#", "#..#", "#..#", "#..#", "#..#", ".##.");
+        g('S', ".###", "#...", "#...", ".##.", "...#", "...#", "###.");
+        g('T', "###", ".#.", ".#.", ".#.", ".#.", ".#.", ".#.");
+        g('H', "#..#", "#..#", "#..#", "####", "#..#", "#..#", "#..#");
         g('N', "#..#", "##.#", "##.#", "#.##", "#.##", "#..#", "#..#");
     }
     static int textWidth(String s) {
@@ -60,8 +66,12 @@ public class Labels {
         return w - 1;
     }
 
-    // TaCZ ammo id, label text, category (picks the text color and the mold shape)
-    record Cal(String id, String text, String cat) {}
+    // ammo id (its path), label text, category (picks the text color and the mold shape), and the gun pack's
+    // namespace: TaCZ's default pack, or the Immersive Armorer pack (whose files are always written, see main)
+    record Cal(String id, String text, String cat, String ns) {
+        Cal(String id, String text, String cat) { this(id, text, cat, "tacz"); }
+        boolean armorer() { return ns.equals("immersive_armorer"); }
+    }
     static final List<Cal> CALS = List.of(
         new Cal("9mm", "9MM", "pistol"), new Cal("22wmr", ".22WMR", "pistol"), new Cal("357mag", ".357", "pistol"),
         new Cal("45acp", ".45ACP", "pistol"), new Cal("500mag", ".500", "pistol"), new Cal("50ae", ".50AE", "pistol"),
@@ -71,11 +81,17 @@ public class Labels {
         new Cal("6x43", "6x43", "rifle"), new Cal("762x39", "7.62x39", "rifle"), new Cal("30_06", "30-06", "sniper"),
         new Cal("338", ".338", "sniper"), new Cal("45_70", "45-70", "sniper"), new Cal("50bmg", ".50BMG", "sniper"),
         new Cal("762x54", "7.62x54", "sniper"), new Cal("792x57", "7.92x57", "sniper"), new Cal("12g", "12GA", "shotgun"),
-        new Cal("40mm", "40MM", "rpg"), new Cal("rpg_rocket", "RPG-7", "rpg"));
+        new Cal("40mm", "40MM", "rpg"), new Cal("rpg_rocket", "RPG-7", "rpg"),
+        new Cal("454_casul", ".454", "pistol", "immersive_armorer"), new Cal("ap_ammo", "AP", "rifle", "immersive_armorer"),
+        new Cal("20mm", "20MM", "sniper", "immersive_armorer"),
+        // its other ammo: icons only (drawn by ArmorerAmmo.java), no casing or mold
+        new Cal("cut_steel_rod", "ROD", "energy", "immersive_armorer"), new Cal("burst_capacitor", "BURST", "energy", "immersive_armorer"),
+        new Cal("stream_capacitor", "STREAM", "energy", "immersive_armorer"), new Cal("high_power_capacitor", "POWER", "energy", "immersive_armorer"),
+        new Cal("chemical", "CHEM", "chemical", "immersive_armorer"));
 
     static final Map<String, Integer> CAT_TEXT = Map.of(
         "pistol", 0x8fd35e, "smg", 0x6cb2f0, "rifle", 0xf2a446, "sniper", 0xf06a5c,
-        "shotgun", 0xc58cf0, "rpg", 0xb8c86e);
+        "shotgun", 0xc58cf0, "rpg", 0xb8c86e, "energy", 0x5fd4e6, "chemical", 0xf0d34a);
     static final int BACKGROUND = 0x000000;
 
     static int A(int rgb) { return 0xff000000 | rgb; }
@@ -107,7 +123,8 @@ public class Labels {
 
     static final String TEX = "src/main/resources/assets/immersive_munitions/textures/item/";
     static final String MODELS = "src/main/resources/assets/immersive_munitions/models/item/";
-    static final String SLOT ="src/main/resources/resourcepacks/immersive_munitions_ammo/assets/tacz/textures/ammo/slot/";
+    static final String PACK = "src/main/resources/resourcepacks/immersive_munitions_ammo/assets/";
+    static String slot(Cal c) { return PACK + c.ns() + "/textures/ammo/slot/" + c.id() + ".png"; }
 
     static BufferedImage read(String p) throws Exception { return ImageIO.read(new File(p)); }
 
@@ -119,7 +136,7 @@ public class Labels {
     static BufferedImage item(Cal c, String itemPrefix, String texDir, String texPrefix, BufferedImage plain) throws Exception {
         BufferedImage labeled = stamp(plain, c);
         String item = itemPrefix + c.id(), tex = texPrefix + c.id();
-        if (!new File(MODELS + item + ".json").exists()) return labeled;
+        if (!c.armorer() && !new File(MODELS + item + ".json").exists()) return labeled;
         write(labeled, TEX + texDir + tex + ".png", false);
         write(plain, TEX + texDir + "unlabeled/" + tex + ".png", false);
         writeModel(MODELS + item + ".json", texDir + "unlabeled/" + tex);
@@ -149,10 +166,10 @@ public class Labels {
         for (Cal c : CALS) {
             BufferedImage plainRound = read("art/sprites/rounds/round_" + c.id() + ".png");
             BufferedImage round = stamp(plainRound, c);
-            boolean rocket = c.id().equals("rpg_rocket");
+            boolean rocket = c.id().equals("rpg_rocket") || c.cat().equals("energy") || c.cat().equals("chemical");   // icon only
             // TaCZ draws the inventory icon from the icon pack (labeled); our flat world model uses the plain round
-            write(plainRound, TEX + "ammo/loaded_round_reference/round_" + c.id() + ".png", !rocket);
-            write(round, SLOT + c.id() + ".png", !rocket);
+            write(plainRound, TEX + "ammo/loaded_round_reference/round_" + c.id() + ".png", !rocket && !c.armorer());
+            write(round, slot(c), !rocket && !c.armorer());
             BufferedImage casing = null, bullet = null, mold = null;
             if (!rocket) {
                 casing = item(c, "empty_casing_", "ammo/empty_casings/", "casing_", read("art/sprites/casings/casing_" + c.id() + ".png"));

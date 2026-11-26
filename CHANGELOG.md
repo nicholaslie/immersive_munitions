@@ -2,13 +2,22 @@
 
 ## Unreleased
 
-Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.4.0-beta), only Fixed raises the last (0.3.1-beta).
+Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.5.0-beta), only Fixed raises the last (0.4.1-beta).
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+## 0.4.0-beta (2026-11-26)
+
+Support for the Immersive Armorer gun pack: all its ammo is now made in IE's machines.
+
+### Added
+
+- **Immersive Armorer support:** ammo for the Immersive Armorer gun pack, made the IE way. Its .454 Casull, AP rifle and 20mm cased telescoped rounds get casings, projectiles and molds like TaCZ's, on blueprints of their own (Immersive Armorer Molds and Projectiles), and are finished in the Ammunition Assembler. Its other ammo comes from IE's machines: cut steel rods from steel rods in the Metal Press (rod mold), the burst, stream and high power capacitor cells on a new Energy Cells blueprint, and flammable chemical from glass bottles filled with creosote, ethanol or biodiesel in the Bottling Machine. Without the gun pack, all of this is hidden and its recipes switch off.
+- The icon pack covers the Immersive Armorer ammo too, with labels in the inventory and flat models in the world.
 
 ## 0.3.0-beta (2026-11-25)
 

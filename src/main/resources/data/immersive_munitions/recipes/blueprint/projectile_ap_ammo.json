@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "immersive_armorer_projectiles",
+  "inputs": [
+    {"tag": "forge:plates/copper"},
+    {"tag": "forge:wires/steel"}
+  ],
+  "result": {"item": "immersive_munitions:projectile_ap_ammo", "count": 1}
+}

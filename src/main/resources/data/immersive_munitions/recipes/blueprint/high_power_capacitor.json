@@ -1,0 +1,11 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "energy_cells",
+  "inputs": [
+    {"base_ingredient": {"tag": "forge:glass"}, "count": 2},
+    {"base_ingredient": {"tag": "forge:wires/electrum"}, "count": 2},
+    {"item": "immersiveengineering:electron_tube"},
+    {"base_ingredient": {"tag": "forge:dusts/redstone"}, "count": 3}
+  ],
+  "result": {"item": "tacz:ammo", "nbt": "{AmmoId:\"immersive_armorer:high_power_capacitor\"}", "count": 3}
+}

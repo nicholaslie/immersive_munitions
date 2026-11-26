@@ -24,6 +24,9 @@
     "immersive_munitions:projectile_762x39",
     "immersive_munitions:projectile_762x54",
     "immersive_munitions:projectile_792x57",
-    "immersive_munitions:projectile_9mm"
+    "immersive_munitions:projectile_9mm",
+    "immersive_munitions:projectile_454_casul",
+    "immersive_munitions:projectile_ap_ammo",
+    "immersive_munitions:projectile_20mm"
   ]
 }

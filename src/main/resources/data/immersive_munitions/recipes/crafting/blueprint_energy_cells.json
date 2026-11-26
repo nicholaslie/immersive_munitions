@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {"item": "immersiveengineering:electron_tube"},
+    "d": {"tag": "forge:dyes/blue"},
+    "p": {"item": "minecraft:paper"}
+  },
+  "pattern": [" B ", "ddd", "ppp"],
+  "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "energy_cells"}},
+  "show_notification": true
+}

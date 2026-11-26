@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "immersive_armorer_projectiles",
+  "inputs": [
+    {"tag": "forge:plates/copper"},
+    {"base_ingredient": {"tag": "forge:wires/lead"}, "count": 2}
+  ],
+  "result": {"item": "immersive_munitions:projectile_454_casul", "count": 3}
+}

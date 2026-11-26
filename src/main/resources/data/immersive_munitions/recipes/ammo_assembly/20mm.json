@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_20mm"},
+  "projectile": {"item": "immersive_munitions:projectile_20mm"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "immersive_armorer:20mm", "count": 1}
+}

@@ -1,0 +1,7 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_454_casul"},
+  "projectile": {"item": "immersive_munitions:projectile_454_casul"},
+  "gunpowder": {"tag": "forge:gunpowder"},
+  "result": {"ammo": "immersive_armorer:454_casul", "count": 1}
+}

@@ -2,7 +2,7 @@
 
 Immersive Munitions is licensed under the **GNU General Public License v3.0 or later** (see [LICENSE](LICENSE)), except for the third-party material below, which stays under its original license.
 
-This is an unofficial addon, not made or endorsed by the authors of Immersive Engineering, Timeless and Classics Zero (TaCZ), Immersive Farming or Immersive Geology.
+This is an unofficial addon, not made or endorsed by the authors of Immersive Engineering, Timeless and Classics Zero (TaCZ), Immersive Armorer, Immersive Farming or Immersive Geology.
 
 ## Timeless and Classics Zero (TaCZ), by Serene Wave Studio / Timeless Squad
 
@@ -40,6 +40,10 @@ The mod logo (`icon.png`, made by `art/logo/Badge.java`) uses Immersive Farming'
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Source: https://github.com/Etyl/ImmersiveFarming
+
+## Immersive Armorer, by Koei
+
+A TaCZ gun pack (CC BY-NC-ND 4.0). None of its assets or data are included. The mod refers to its ammo by id (`immersive_armorer:...`) to make it in IE's machines (`compat/ArmorerCompat.java`), and the icon pack replaces its ammo icons with this mod's own art. Without the pack installed, that support stays hidden.
 
 ## Immersive Geology and Create
 

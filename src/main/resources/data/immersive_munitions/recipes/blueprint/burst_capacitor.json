@@ -1,0 +1,10 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "energy_cells",
+  "inputs": [
+    {"base_ingredient": {"tag": "forge:glass"}, "count": 2},
+    {"base_ingredient": {"tag": "forge:wires/copper"}, "count": 2},
+    {"base_ingredient": {"tag": "forge:dusts/redstone"}, "count": 3}
+  ],
+  "result": {"item": "tacz:ammo", "nbt": "{AmmoId:\"immersive_armorer:burst_capacitor\"}", "count": 5}
+}

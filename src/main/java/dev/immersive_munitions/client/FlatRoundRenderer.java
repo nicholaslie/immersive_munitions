@@ -3,6 +3,7 @@ package dev.immersive_munitions.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.tacz.guns.api.item.IAmmo;
 import dev.immersive_munitions.ImmersiveMunitions;
+import dev.immersive_munitions.compat.ArmorerCompat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -32,6 +33,9 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
             "12g", "22wmr", "300blk", "308", "30_06", "338", "357mag", "40mm", "45_70", "45acp",
             "46x30", "500mag", "50ae", "50bmg", "545x39", "556x45", "57x28", "58x42", "68x51fury",
             "6x43", "762x25", "762x39", "762x54", "792x57", "9mm", "rpg_rocket");
+    // the Immersive Armorer gun pack's ammo, in its own namespace (the models share the tacz_round folder; no ids clash)
+    private static final List<String> ARMORER_ROUNDS = List.of(
+            "454_casul", "ap_ammo", "20mm", "cut_steel_rod", "burst_capacitor", "stream_capacitor", "high_power_capacitor", "chemical");
 
     private final IClientItemExtensions tacz;
 
@@ -43,6 +47,7 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
     @SubscribeEvent
     public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
         ROUNDS.forEach(id -> event.register(model(id)));
+        ARMORER_ROUNDS.forEach(id -> event.register(model(id)));
     }
 
     // TaCZ's ammo item gets its renderer from initializeClient; wrap it so we can step in for world rendering
@@ -89,7 +94,12 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
         if (!(stack.getItem() instanceof IAmmo ammo)) return null;
 
         ResourceLocation id = ammo.getAmmoId(stack);
-        if (!"tacz".equals(id.getNamespace()) || !ROUNDS.contains(id.getPath())) return null;
+        boolean ours = switch (id.getNamespace()) {
+            case "tacz" -> ROUNDS.contains(id.getPath());
+            case ArmorerCompat.NAMESPACE -> ARMORER_ROUNDS.contains(id.getPath());
+            default -> false;
+        };
+        if (!ours) return null;
 
         BakedModel model = mc.getModelManager().getModel(model(id.getPath()));
         return model == mc.getModelManager().getMissingModel() ? null : model;

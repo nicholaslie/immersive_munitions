@@ -1,0 +1,6 @@
+{
+  "type": "immersiveengineering:bottling_machine",
+  "input": {"item": "minecraft:glass_bottle"},
+  "fluid": {"tag": "forge:creosote", "amount": 250},
+  "results": [{"item": "tacz:ammo", "nbt": "{AmmoId:\"immersive_armorer:chemical\"}", "count": 4}]
+}

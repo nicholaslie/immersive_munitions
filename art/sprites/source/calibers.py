@@ -30,6 +30,10 @@ CAL = {
  "762x54":  S(53.7,77.0,14.5,1.6,None,12.4,11.8,39.0,45.0,8.7,7.92,31,"spitzer"),
  "338":     S(69.2,93.5,14.9,1.6,(13.5,1.4),14.9,14.6,49.0,61.0,9.3,8.6,36,"spitzer"),
  "50bmg":   S(99.1,138.7,20.4,2.0,(18.5,1.6),20.4,18.0,71.0,86.0,14.6,12.9,55,"spitzer",tip=0.16),
+ # Immersive Armorer gun pack (ammo ids in the immersive_armorer namespace)
+ "454_casul": S(35.1,44.8,13.0,1.4,None,12.1,12.0,35.1,35.1,12.0,11.5,18,"flat"),          # .454 Casull, revolver
+ "ap_ammo":   S(51.2,71.1,12.0,1.3,(10.8,1.2),11.9,11.5,36.0,43.5,8.7,7.82,32,"spitzer",tip=0.3),   # 7.62x51 AP, black tip
+ "20mm":      S(60.0,64.0,26.0,2.0,(24.0,1.6),26.0,26.0,60.0,60.0,26.0,19.5,30,"flat"),   # 20mm cased telescoped: projectile sits inside
 }
 def hpx(oal): return 16+46*(oal/138.7)**0.65
 

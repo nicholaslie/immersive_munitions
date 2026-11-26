@@ -2,6 +2,7 @@ package dev.immersive_munitions.client.jei;
 
 import dev.immersive_munitions.ImmersiveMunitions;
 import dev.immersive_munitions.Config;
+import dev.immersive_munitions.compat.ArmorerCompat;
 import dev.immersive_munitions.compat.MaterialCompat;
 import dev.immersive_munitions.compat.RemovedRecipes;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
@@ -51,13 +52,15 @@ public class ImmersiveMunitionsJei implements IModPlugin {
     }
 
     // hides our zinc and brass items that Create or Immersive Geology already provide (MaterialCompat), and IE's
-    // guns and their ammo when their recipes are switched off (RemovedRecipes)
+    // guns and their ammo when their recipes are switched off (RemovedRecipes), and the Immersive Armorer parts when
+    // that gun pack isn't installed (ArmorerCompat)
     @Override
     public void onRuntimeAvailable(IJeiRuntime runtime) {
         var ingredients = runtime.getIngredientManager();
-        boolean ieWeapons = Config.REMOVE_IE_WEAPONS.get();
+        boolean ieWeapons = Config.REMOVE_IE_WEAPONS.get(), noArmorer = !ArmorerCompat.packLoaded(true);
         List<ItemStack> hidden = ingredients.getAllIngredients(VanillaTypes.ITEM_STACK).stream()
-                .filter(stack -> MaterialCompat.isHidden(stack.getItem()) || (ieWeapons && RemovedRecipes.isIeWeaponStack(stack)))
+                .filter(stack -> MaterialCompat.isHidden(stack.getItem()) || (ieWeapons && RemovedRecipes.isIeWeaponStack(stack))
+                        || (noArmorer && ArmorerCompat.isArmorerStack(stack)))
                 .toList();
         if (!hidden.isEmpty()) ingredients.removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, hidden);
     }

@@ -1,6 +1,7 @@
 package dev.immersive_munitions.registry;
 
 import dev.immersive_munitions.ImmersiveMunitions;
+import dev.immersive_munitions.compat.ArmorerCompat;
 import dev.immersive_munitions.compat.MaterialCompat;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -13,6 +14,7 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * One creative tab split into sections. The tab only shows the selected section;
@@ -64,10 +66,18 @@ public final class ModTabs {
             // Immersive Geology already provide (MaterialCompat)
             case MATERIALS -> ModItems.ITEMS.getEntries().stream().map(RegistryObject::get)
                     .filter(item -> !MaterialCompat.isHidden(item)).forEach(item -> out.add(new ItemStack(item)));
-            case MOLDS -> AmmoComponentItems.CASING_MOLDS.values().forEach(item -> out.add(new ItemStack(item.get())));
-            case SHELLS -> AmmoComponentItems.EMPTY_CASINGS.values().forEach(item -> out.add(new ItemStack(item.get())));
-            case PROJECTILES -> AmmoComponentItems.PROJECTILES.values().forEach(item -> out.add(new ItemStack(item.get())));
+            case MOLDS -> addParts(AmmoComponentItems.CASING_MOLDS, out);
+            case SHELLS -> addParts(AmmoComponentItems.EMPTY_CASINGS, out);
+            case PROJECTILES -> addParts(AmmoComponentItems.PROJECTILES, out);
         }
+    }
+
+    // a gun pack's parts only show when that pack is installed (ArmorerCompat)
+    private static void addParts(Map<String, RegistryObject<Item>> parts, Collection<ItemStack> out) {
+        boolean armorer = ArmorerCompat.packLoaded(true);
+        parts.forEach((caliber, item) -> {
+            if (armorer || !AmmoComponentItems.ARMORER_CALIBERS.contains(caliber)) out.add(new ItemStack(item.get()));
+        });
     }
 
     /** Shows only the selected section; search still sees everything. */
