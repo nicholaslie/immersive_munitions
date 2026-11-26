@@ -7,6 +7,7 @@ bin/
 # dev game folders (worlds, logs, configs from runClient/runServer/runData)
 run/
 run-data/
+run-1.21.1/
 mcmodsrepo/
 
 # third-party mod jars: download locally, see libs/README.md
