@@ -80,7 +80,7 @@ public final class RemovedRecipes {
         int removed = 0;
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
             Recipe<?> recipe = holder.value();
-            if ((tacz && isTaczAmmo(recipe)) || (ie && makes(recipe, access, RemovedRecipes::isIeWeaponStack))
+            if ((tacz && isTaczAmmo(recipe, access)) || (ie && makes(recipe, access, RemovedRecipes::isIeWeaponStack))
                     || (noArmorer && makes(recipe, access, ArmorerCompat::isArmorerStack))) removed++;
             else kept.add(holder);
         }
@@ -91,9 +91,9 @@ public final class RemovedRecipes {
         recipeManager = null;
     }
 
-    private static boolean isTaczAmmo(Recipe<?> recipe) {
+    private static boolean isTaczAmmo(Recipe<?> recipe, RegistryAccess access) {
         if (!(recipe instanceof GunSmithTableRecipe table)) return false;
-        table.init();   // resolves the result, as TaCZ does on this same event; safe to repeat
+        table.init(access);   // resolves the result, as TaCZ does on this same event; safe to repeat
         return table.getOutput().getItem() instanceof IAmmo;
     }
 
