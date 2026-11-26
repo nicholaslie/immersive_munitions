@@ -2,11 +2,12 @@ package dev.immersive_munitions;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
-/** Common config: whether zinc ore generates, and whether it steps aside for Immersive Geology. */
+/** Common config: whether zinc ore generates, and whether it steps aside for Immersive Geology or Create. */
 public final class Config {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.BooleanValue ZINC_WORLDGEN;
     public static final ForgeConfigSpec.BooleanValue YIELD_TO_GEOLOGY;
+    public static final ForgeConfigSpec.BooleanValue YIELD_TO_CREATE;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -19,6 +20,9 @@ public final class Config {
                 .comment("Skip zinc ore when Immersive Geology is installed, since it has its own zinc ores",
                         "(sphalerite, smithsonite). Set to false to generate both.")
                 .define("disable_when_immersive_geology_present", true);
+        YIELD_TO_CREATE = builder
+                .comment("Skip zinc ore when Create is installed, since it has its own zinc ore. Set to false to generate both.")
+                .define("disable_when_create_present", true);
         builder.pop();
 
         SPEC = builder.build();

@@ -3,5 +3,8 @@
   "biomes": "#minecraft:is_overworld",
   "features": "immersive_munitions:zinc_ore_placed",
   "step": "underground_ores",
-  "disabled_if_mod_loaded": "immersivegeology"
+  "disabled_if_mods_loaded": [
+    "immersivegeology",
+    "create"
+  ]
 }

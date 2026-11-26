@@ -1,0 +1,24 @@
+{
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "create"
+    },
+    {
+      "type": "forge:not",
+      "value": {
+        "type": "forge:mod_loaded",
+        "modid": "immersivegeology"
+      }
+    }
+  ],
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "zinc_ingot",
+  "ingredient": {
+    "item": "immersive_munitions:zinc_dust"
+  },
+  "result": "create:zinc_ingot",
+  "experience": 0.7,
+  "cookingtime": 200
+}

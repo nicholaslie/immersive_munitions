@@ -1,6 +1,7 @@
 package dev.immersive_munitions.registry;
 
 import dev.immersive_munitions.ImmersiveMunitions;
+import dev.immersive_munitions.compat.MaterialCompat;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -59,8 +60,10 @@ public final class ModTabs {
 
     private static void addItems(Section section, Collection<ItemStack> out) {
         switch (section) {
-            // ModItems also holds the block items, so this covers the ore and storage blocks
-            case MATERIALS -> ModItems.ITEMS.getEntries().forEach(item -> out.add(new ItemStack(item.get())));
+            // ModItems also holds the block items, so this covers the ore and storage blocks. Leaves out what Create or
+            // Immersive Geology already provide (MaterialCompat)
+            case MATERIALS -> ModItems.ITEMS.getEntries().stream().map(RegistryObject::get)
+                    .filter(item -> !MaterialCompat.isHidden(item)).forEach(item -> out.add(new ItemStack(item)));
             case MOLDS -> AmmoComponentItems.CASING_MOLDS.values().forEach(item -> out.add(new ItemStack(item.get())));
             case SHELLS -> AmmoComponentItems.EMPTY_CASINGS.values().forEach(item -> out.add(new ItemStack(item.get())));
             case PROJECTILES -> AmmoComponentItems.PROJECTILES.values().forEach(item -> out.add(new ItemStack(item.get())));

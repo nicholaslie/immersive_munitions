@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+
+Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.3.0-beta), only Fixed raises the last (0.2.1-beta).
+
+### Added
+
+### Changed
+
+### Fixed
+
+## 0.2.0-beta (2026-11-25)
+
+Immersive Munitions now steps aside for Create and Immersive Geology, and the unused brass parts are gone.
+
+### Added
+
+- **Create compatibility:** with Create installed, our zinc (ore, raw zinc, ingot, nugget and blocks) and the brass items Create also makes (ingot, nugget, block and plate) are hidden from the creative tab and JEI, and their recipes switch off, so Create's are used instead. Zinc dust stays, since Create has none, and smelts into Create's zinc ingot. Our zinc ore stops generating too (config: `disable_when_create_present`).
+- **Immersive Geology:** with Immersive Geology installed, all our zinc items (including zinc dust) are now hidden the same way, alongside the zinc ore that already stepped aside for it.
+- IE's machines now give Create's or Immersive Geology's brass and zinc, not ours, when those mods are installed.
+
+### Changed
+
+- **Removed the brass gear, rod, wire and dust.** Nothing in the mod used them. Any already in a world disappear when it loads (Forge warns about missing items). Zinc dust stays, for IE's ore doubling.
+
+### Fixed
+
+- The credits in the mod list now name the right sources: the zinc and brass textures are recolored from Immersive Engineering's art, not another mod's.
+
 ## 0.1.0-beta (2026-11-25)
 
 The first beta. The Ammunition Assembler has been rebuilt to look and work like a real progressive ammunition press, and it now has sounds. Version numbers now follow [Semantic Versioning](https://semver.org): new features raise the middle number, fixes raise the last, and 1.0.0 will be the full release.

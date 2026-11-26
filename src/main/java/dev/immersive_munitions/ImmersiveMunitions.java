@@ -1,5 +1,6 @@
 package dev.immersive_munitions;
 
+import dev.immersive_munitions.compat.MaterialCompat;
 import dev.immersive_munitions.registry.AmmoComponentItems;
 import dev.immersive_munitions.registry.CreativeIconItems;
 import dev.immersive_munitions.registry.ModBlocks;
@@ -46,5 +47,6 @@ public class ImmersiveMunitions {
 
     private void commonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(ModMultiblocks::registerStructures);
+        event.enqueueWork(MaterialCompat::preferOtherMods);   // after IE's config has loaded
     }
 }

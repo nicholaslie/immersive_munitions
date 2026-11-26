@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "#forge:dusts/zinc",
-    "#forge:dusts/brass"
+    "#forge:dusts/zinc"
   ]
 }

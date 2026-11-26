@@ -21,8 +21,7 @@ def w(path, obj):
 
 # ---------- registry content ----------
 ITEMS = {"raw_zinc":"Raw Zinc","zinc_ingot":"Zinc Ingot","zinc_nugget":"Zinc Nugget","zinc_dust":"Zinc Dust",
-         "brass_ingot":"Brass Ingot","brass_nugget":"Brass Nugget","brass_dust":"Brass Dust",
-         "brass_plate":"Brass Plate","brass_gear":"Brass Gear","brass_rod":"Brass Rod","brass_wire":"Brass Wire"}
+         "brass_ingot":"Brass Ingot","brass_nugget":"Brass Nugget","brass_plate":"Brass Plate"}
 BLOCKS = {"zinc_ore":"Zinc Ore","deepslate_zinc_ore":"Deepslate Zinc Ore","raw_zinc_block":"Block of Raw Zinc",
           "zinc_block":"Block of Zinc","brass_block":"Block of Brass"}
 lang = {f"item.{MOD}.{k}":v for k,v in ITEMS.items()}
@@ -65,20 +64,32 @@ def it(i): return {"item":f"{MOD}:{i}"}
 def shaped9(res, src): return {"type":"minecraft:crafting_shaped","category":"misc","key":{"#":it(src)},"pattern":["###","###","###"],"result":{"item":f"{MOD}:{res}"}}
 def unpack(res, src, n): return {"type":"minecraft:crafting_shapeless","category":"misc","ingredients":[it(src)],"result":{"item":f"{MOD}:{res}","count":n}}
 R = f"{D}/recipes"
+# Load conditions: our zinc steps aside for Create and Immersive Geology, our brass ingot/nugget/block for Create
+# (MaterialCompat hides the same items). Recipes for those items switch off; smelting zinc dust, which Create lacks,
+# gives Create's ingot instead
+def without(*mods): return [{"type":"forge:not","value":{"type":"forge:mod_loaded","modid":mod}} for mod in mods]
+def loaded(mod): return [{"type":"forge:mod_loaded","modid":mod}]
+def cond(recipe, conditions): return {"conditions":conditions, **recipe}
+HIDDEN_WITH = {"zinc":("create","immersivegeology"), "brass":("create",)}
 for m in ("zinc","brass"):
-    w(f"{R}/{m}_block_from_ingots.json", shaped9(f"{m}_block", f"{m}_ingot"))
-    w(f"{R}/{m}_ingot_from_block.json", unpack(f"{m}_ingot", f"{m}_block", 9))
-    w(f"{R}/{m}_ingot_from_nuggets.json", shaped9(f"{m}_ingot", f"{m}_nugget"))
-    w(f"{R}/{m}_nugget_from_ingot.json", unpack(f"{m}_nugget", f"{m}_ingot", 9))
-w(f"{R}/raw_zinc_block_from_raw_zinc.json", shaped9("raw_zinc_block","raw_zinc"))
-w(f"{R}/raw_zinc_from_raw_zinc_block.json", unpack("raw_zinc","raw_zinc_block",9))
-for src, t, xp in [("zinc_ore",200,0.7),("deepslate_zinc_ore",200,0.7),("raw_zinc",200,0.7),("zinc_dust",200,0.7)]:
-    for kind, time in (("smelting",t),("blasting",t//2)):
-        w(f"{R}/zinc_ingot_from_{kind}_{src}.json", {"type":f"minecraft:{kind}","category":"misc","group":"zinc_ingot",
-          "ingredient":it(src),"result":f"{MOD}:zinc_ingot","experience":xp,"cookingtime":time})
+    c = without(*HIDDEN_WITH[m])
+    w(f"{R}/{m}_block_from_ingots.json", cond(shaped9(f"{m}_block", f"{m}_ingot"), c))
+    w(f"{R}/{m}_ingot_from_block.json", cond(unpack(f"{m}_ingot", f"{m}_block", 9), c))
+    w(f"{R}/{m}_ingot_from_nuggets.json", cond(shaped9(f"{m}_ingot", f"{m}_nugget"), c))
+    w(f"{R}/{m}_nugget_from_ingot.json", cond(unpack(f"{m}_nugget", f"{m}_ingot", 9), c))
+zc = without("create","immersivegeology")
+w(f"{R}/raw_zinc_block_from_raw_zinc.json", cond(shaped9("raw_zinc_block","raw_zinc"), zc))
+w(f"{R}/raw_zinc_from_raw_zinc_block.json", cond(unpack("raw_zinc","raw_zinc_block",9), zc))
+def cook(kind, time, group, src, result, xp, conditions):
+    return {"conditions":conditions,"type":f"minecraft:{kind}","category":"misc","group":group,
+            "ingredient":it(src),"result":result,"experience":xp,"cookingtime":time}
 for kind, time in (("smelting",200),("blasting",100)):
-    w(f"{R}/brass_ingot_from_{kind}_brass_dust.json", {"type":f"minecraft:{kind}","category":"misc","group":"brass_ingot",
-      "ingredient":it("brass_dust"),"result":f"{MOD}:brass_ingot","experience":0.5,"cookingtime":time})
+    for src in ("zinc_ore","deepslate_zinc_ore","raw_zinc"):
+        w(f"{R}/zinc_ingot_from_{kind}_{src}.json", cook(kind, time, "zinc_ingot", src, f"{MOD}:zinc_ingot", 0.7, zc))
+    # zinc dust: ours alone; with Create (and not Immersive Geology, which hides the dust) into Create's ingot
+    w(f"{R}/zinc_ingot_from_{kind}_zinc_dust.json", cook(kind, time, "zinc_ingot", "zinc_dust", f"{MOD}:zinc_ingot", 0.7, zc))
+    w(f"{R}/create_zinc_ingot_from_{kind}_zinc_dust.json",
+      cook(kind, time, "zinc_ingot", "zinc_dust", "create:zinc_ingot", 0.7, loaded("create") + without("immersivegeology")))
 
 # ---------- tags ----------
 def tag(path, vals): w(path, {"replace":False,"values":vals})
@@ -86,15 +97,12 @@ F = f"{RES}/data/forge/tags"; MC = f"{RES}/data/minecraft/tags"
 m = lambda n: f"{MOD}:{n}"
 tag(f"{F}/items/ingots/zinc.json",[m("zinc_ingot")]);   tag(f"{F}/items/ingots/brass.json",[m("brass_ingot")])
 tag(f"{F}/items/nuggets/zinc.json",[m("zinc_nugget")]); tag(f"{F}/items/nuggets/brass.json",[m("brass_nugget")])
-tag(f"{F}/items/dusts/zinc.json",[m("zinc_dust")]);     tag(f"{F}/items/dusts/brass.json",[m("brass_dust")])
+tag(f"{F}/items/dusts/zinc.json",[m("zinc_dust")])
 tag(f"{F}/items/raw_materials/zinc.json",[m("raw_zinc")])
-for form, plural in (("plate","plates"),("gear","gears"),("rod","rods"),("wire","wires")):
-    tag(f"{F}/items/{plural}/brass.json",[m(f"brass_{form}")])
-    tag(f"{F}/items/{plural}.json",[f"#forge:{plural}/brass"])
-tag(f"{F}/items/rods/all_metal.json",["#forge:rods/brass"])  # merges into IE's tag (replace=false)
+tag(f"{F}/items/plates/brass.json",[m("brass_plate")]); tag(f"{F}/items/plates.json",["#forge:plates/brass"])
 tag(f"{F}/items/ingots.json",["#forge:ingots/zinc","#forge:ingots/brass"])
 tag(f"{F}/items/nuggets.json",["#forge:nuggets/zinc","#forge:nuggets/brass"])
-tag(f"{F}/items/dusts.json",["#forge:dusts/zinc","#forge:dusts/brass"])
+tag(f"{F}/items/dusts.json",["#forge:dusts/zinc"])
 tag(f"{F}/items/raw_materials.json",["#forge:raw_materials/zinc"])
 ores = [m("zinc_ore"), m("deepslate_zinc_ore")]
 tag(f"{F}/items/ores/zinc.json",ores);                  tag(f"{F}/blocks/ores/zinc.json",ores)
@@ -119,5 +127,5 @@ w(f"{D}/worldgen/placed_feature/zinc_ore_placed.json",{"feature":m("zinc_ore"),"
   {"type":"minecraft:height_range","height":{"type":"minecraft:trapezoid","min_inclusive":{"absolute":-64},"max_inclusive":{"absolute":55}}},
   {"type":"minecraft:biome"}]})
 w(f"{D}/forge/biome_modifier/zinc_ore.json",{"type":f"{MOD}:add_features_unless_mod_loaded","biomes":"#minecraft:is_overworld",
-  "features":m("zinc_ore_placed"),"step":"underground_ores","disabled_if_mod_loaded":"immersivegeology"})
+  "features":m("zinc_ore_placed"),"step":"underground_ores","disabled_if_mods_loaded":["immersivegeology","create"]})
 print("done")

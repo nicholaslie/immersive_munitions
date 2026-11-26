@@ -18,7 +18,7 @@ Source: https://github.com/MCModderAnchor/TACZ
 
 Licensed under [Blu's License of Common Sense](https://github.com/BluSunrize/ImmersiveEngineering/blob/1.20.1/LICENSE), which allows addons to use and remix IE's art for the addon, with credit.
 
-- The zinc and brass textures are recolored from IE's metal art with this mod's own palettes (made by `art/materials/Materials.java`): the zinc ore from IE's nickel ore patches; raw zinc and the block of raw zinc from IE's raw lead; the zinc ingot, nugget and block from IE's aluminum ingot, nugget and storage block; the brass ingot, nugget and block from IE's copper ones; the dusts, brass plate, rod and wire from IE's metal dust, plate, stick and wire. The zinc ore blocks draw Minecraft's own stone and deepslate under that overlay at runtime; no vanilla texture is included.
+- The zinc and brass textures are recolored from IE's metal art with this mod's own palettes (made by `art/materials/Materials.java`): the zinc ore from IE's nickel ore patches; raw zinc and the block of raw zinc from IE's raw lead; the zinc ingot, nugget and block from IE's aluminum ingot, nugget and storage block; the brass ingot, nugget and block from IE's copper ones; the zinc dust and brass plate from IE's metal dust and plate. The zinc ore blocks draw Minecraft's own stone and deepslate under that overlay at runtime; no vanilla texture is included.
 - The 64x64 mold sprites are original art drawn to match IE's molds.
 - The Ammunition Assembler's model is original, but much of it uses IE's own block textures, referenced by name from IE at runtime: the Automated Engineer's Workbench sheet (its base, ribbed housing, roof ports and trim, which the assembler is styled after), IE's steel, aluminium and blue sheet metal, the conveyor, and treated wood. Its machine-specific details use our own sheet (`textures/block/multiblocks/ammo_assembler.png`, made by `art/assembler/AssemblerSheet.java`), which also holds one tile recolored from IE's steel sheet metal (brightened).
 - The Ammunition Assembler's sounds are the mod's own sound events, but for now they play existing Immersive Engineering sounds (the Automated Assembler and the Metal Press) and Minecraft sounds, referenced by name at runtime (`assets/immersive_munitions/sounds.json`). No sound files are included.
@@ -27,9 +27,9 @@ Licensed under [Blu's License of Common Sense](https://github.com/BluSunrize/Imm
 
 Source: https://github.com/BluSunrize/ImmersiveEngineering
 
-## Immersive Geology (LGPL-3.0)
+## Immersive Geology and Create
 
-The brass gear texture is recolored from Immersive Geology's greyscale gear (made by `art/materials/Materials.java`). Zinc ore generation turns itself off when Immersive Geology is installed.
+No Immersive Geology or Create code or assets are included. When either is installed, this mod steps aside for its materials: with Immersive Geology, our zinc ore stops generating and our zinc items are hidden; with Create, our zinc and the brass items Create also makes are hidden the same way (`compat/MaterialCompat.java`).
 
 ## Minecraft and Forge
 

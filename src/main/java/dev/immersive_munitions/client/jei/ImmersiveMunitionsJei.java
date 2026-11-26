@@ -1,21 +1,25 @@
 package dev.immersive_munitions.client.jei;
 
 import dev.immersive_munitions.ImmersiveMunitions;
+import dev.immersive_munitions.compat.MaterialCompat;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
 import dev.immersive_munitions.registry.ModMultiblocks;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
 /**
- * JEI support: adds the Ammunition Assembler's recipes. JEI loads this only when it's installed, and nothing else in
- * the mod uses this package, so JEI stays optional.
+ * JEI support: adds the Ammunition Assembler's recipes, and hides our materials that another mod already provides.
+ * JEI loads this only when it's installed, and nothing else in the mod uses this package, so JEI stays optional.
  */
 @JeiPlugin
 public class ImmersiveMunitionsJei implements IModPlugin {
@@ -41,5 +45,12 @@ public class ImmersiveMunitionsJei implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(ModMultiblocks.AMMO_ASSEMBLER.iconStack(), AmmoAssemblyCategory.TYPE);
+    }
+
+    // hides our zinc and brass items that Create or Immersive Geology already provide (MaterialCompat)
+    @Override
+    public void onRuntimeAvailable(IJeiRuntime runtime) {
+        List<ItemStack> hidden = MaterialCompat.hiddenItems().stream().map(ItemStack::new).toList();
+        if (!hidden.isEmpty()) runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, hidden);
     }
 }

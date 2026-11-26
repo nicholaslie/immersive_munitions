@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /*
- * Draws the zinc and brass textures, recoloured from Immersive Engineering's metal art (and Immersive Geology's gear)
- * with this mod's own palettes, and writes them into the mod.
+ * Draws the zinc and brass textures, recoloured from Immersive Engineering's metal art with this mod's own
+ * palettes, and writes them into the mod.
  *
- *   java art/materials/Materials.java        (from the repo root; needs IE's and IG's source in reference/)
+ *   java art/materials/Materials.java        (from the repo root; needs IE's source in reference/)
  *
  * The zinc ores are an overlay (block/zinc_ore_overlay.png): IE's nickel ore patches, recoloured to zinc. Their block
  * models draw Minecraft's own stone / deepslate first and the overlay on top, like vanilla's grass block sides, so no
@@ -21,8 +21,6 @@ import java.util.TreeSet;
 public class Materials {
     static final String IE = "reference/ImmersiveEngineering-1.20.1/ImmersiveEngineering-1.20.1/src/main/resources/"
             + "assets/immersiveengineering/textures/";
-    static final String IG = "reference/Immersive-Geology-forge-1.20.1/Immersive-Geology-forge-1.20.1/src/main/resources/"
-            + "assets/immersivegeology/textures/item/";
     static final String OUT = "src/main/resources/assets/immersive_munitions/textures/";
 
     // our palettes, dark to light
@@ -42,11 +40,7 @@ public class Materials {
         write("item/zinc_dust", remap(read(IE + "item/metal_dust_iron.png"), ZINC));
         write("item/brass_ingot", remap(read(IE + "item/metal_ingot_copper.png"), BRASS));
         write("item/brass_nugget", remap(read(IE + "item/metal_nugget_copper.png"), BRASS));
-        write("item/brass_dust", remap(read(IE + "item/metal_dust_gold.png"), BRASS));
         write("item/brass_plate", remap(read(IE + "item/metal_plate_copper.png"), BRASS));
-        write("item/brass_rod", remap(read(IE + "item/material_stick_iron.png"), BRASS));
-        write("item/brass_wire", remap(read(IE + "item/material_wire_copper.png"), BRASS));
-        write("item/brass_gear", remap(read(IG + "greyscale/metal/gear.png"), BRASS));
     }
 
     // IE's nickel ore: its patches (green-leaning; the stone is pure grey) as an overlay, each patch tone mapped onto
