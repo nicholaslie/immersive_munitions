@@ -8,6 +8,8 @@ Changes since the last release. The next version number follows from them: anyth
 
 ### Changed
 
+- The Ammunition Assembler's sounds are 10% louder.
+
 ### Fixed
 
 ## 0.4.0-beta (2026-11-26)

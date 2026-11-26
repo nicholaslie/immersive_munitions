@@ -106,7 +106,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     private static final double STREAM_LENGTH = 0.12;
     // Sounds: where they come from (blueprint space), and the running loop's volume
     private static final Vec3 CENTRE = new Vec3(1.5, 1.5, 1.5), FEEDER = new Vec3(1.5, 1.5, 1.5), PRESS = new Vec3(2.5, 1.5, 1.5);
-    private static final float RUNNING_VOLUME = 0.3f;
+    private static final float RUNNING_VOLUME = 0.33f;
 
     @Override
     public State createInitialState(IInitialMultiblockContext<State> ctx) {
@@ -153,14 +153,14 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
                 if (canMove && state.hasGunpowder() && casing.startsPour(level, POUR_LEAD)) {
                     state.pourTube = mbLevel.toAbsolute(DROP_TUBE_TIP);
                     state.pourTicks = POUR_TICKS;
-                    play(level, state.pourTube, ModSounds.ASSEMBLER_POUR.get(), 0.18f, 1.6f);
+                    play(level, state.pourTube, ModSounds.ASSEMBLER_POUR.get(), 0.198f, 1.6f);
                 }
                 boolean wasPlaced = casing.isPlaced(), wasBeforePress = casing.beforePress(level);
                 casing.tickClient(state, level, canMove);
                 if (!wasPlaced && casing.isPlaced())
-                    play(level, mbLevel.toAbsolute(FEEDER), ModSounds.ASSEMBLER_PLACE.get(), 0.2f, 1.7f);
+                    play(level, mbLevel.toAbsolute(FEEDER), ModSounds.ASSEMBLER_PLACE.get(), 0.22f, 1.7f);
                 if (wasBeforePress && !casing.beforePress(level))
-                    play(level, mbLevel.toAbsolute(PRESS), ModSounds.ASSEMBLER_PRESS.get(), 0.15f, 1.3f);
+                    play(level, mbLevel.toAbsolute(PRESS), ModSounds.ASSEMBLER_PRESS.get(), 0.165f, 1.3f);
             }
         if (state.pourTicks > 0) {
             state.pourTicks--;
