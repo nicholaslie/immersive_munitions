@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "heavy_projectiles",
+  "inputs": [
+    {"tag": "c:plates/copper"},
+    {"basePredicate": {"tag": "c:wires/lead"}, "count": 2}
+  ],
+  "result": {"id": "immersive_munitions:projectile_338", "count": 1}
+}

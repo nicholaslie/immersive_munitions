@@ -1,145 +1,93 @@
 plugins {
-    id 'eclipse'
+    id 'java-library'
     id 'idea'
-    id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.neoforged.moddev' version '2.0.74'
 }
 
 version = mod_version
 group = mod_group_id
 
+// immersive_munitions-1.21.1-<version>.jar: the Minecraft version is in the name, the feature version is shared with 1.20.1
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-${minecraft_version}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-    copyIdeResources = true
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+neoForge {
+    version = neo_version
 
     runs {
         configureEach {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            // TaCZ uses mixins, which need the refmap remapped in a dev environment
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
+            // its own folder, so the 1.21.1 dev game never touches the 1.20.1 worlds and configs in run/
+            gameDirectory = project.file('run-1.21.1')
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
         }
-
         client {
-            property 'forge.enabledGameTestNamespaces', mod_id
+            client()
         }
-
         server {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--nogui'
+            server()
+            programArgument '--nogui'
         }
+    }
 
-        gameTestServer {
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        data {
-            workingDirectory project.file('run-data')
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
 repositories {
-    flatDir {
-        dir 'libs'
-    }
-    // JEI, Controlling and Searchables (dev game)
+    // JEI
     maven {
-        name = "BlameJared"
-        url = "https://maven.blamejared.com"
+        name = 'BlameJared'
+        url = 'https://maven.blamejared.com'
     }
-    // Mouse Tweaks (dev game), from Modrinth's Maven
+    // Immersive Engineering and TaCZ, from Modrinth's Maven
     maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content { includeGroup "maven.modrinth" }
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
     }
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    // Jars in libs/ (see libs/README.md), named <artifact>-<version>.jar.
-    // Only used in the dev environment; players install IE and TaCZ themselves.
-    implementation fg.deobf("blank:ImmersiveEngineering:${ie_version}")
-    implementation fg.deobf("blank:tacz-forge:${tacz_version}")
+    implementation "maven.modrinth:immersiveengineering:${ie_version}"
+    implementation "maven.modrinth:timeless-and-classics-zero:${tacz_version}"
+    // IE's recipe codecs; IE bundles the library, so we only compile against it
+    compileOnly "malte0811:DualCodecs:${dualcodecs_version}"
 
     // JEI: we compile against its API only (client/jei, our recipes in JEI when it's installed; optional for players),
     // and run the full mod in the dev game
-    compileOnly fg.deobf("mezz.jei:jei-1.20.1-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-1.20.1-forge-api:${jei_version}")
-    runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}")
-
-    // Convenience mods for the dev game only: inventory mouse shortcuts, and a searchable controls screen
-    runtimeOnly fg.deobf("maven.modrinth:mouse-tweaks:${mouse_tweaks_version}")
-    runtimeOnly fg.deobf("com.blamejared.controlling:Controlling-forge-1.20.1:${controlling_version}")
-    runtimeOnly fg.deobf("com.blamejared.searchables:Searchables-forge-1.20.1:${searchables_version}")
+    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
 }
 
-tasks.named('processResources', ProcessResources).configure {
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
     var replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version: forge_version, forge_version_range: forge_version_range,
-            loader_version_range: loader_version_range,
+            neo_version: neo_version, neo_version_range: neo_version_range, loader_version_range: loader_version_range,
             mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors: mod_authors, mod_description: mod_description,
     ]
     inputs.properties replaceProperties
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
+    expand replaceProperties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
 }
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
 tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Specification-Title'     : mod_id,
-                'Specification-Vendor'    : mod_authors,
-                'Specification-Version'   : '1',
-                'Implementation-Title'    : project.name,
-                'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
     // the license and third-party notices ship with the mod (the logo's frame is MIT, which requires its notice)
     from('LICENSE', 'NOTICE.md')
-    finalizedBy 'reobfJar'
-}
-
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
-    }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '2000']
 }

@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "rifle_projectiles",
+  "inputs": [
+    {"tag": "c:plates/copper"},
+    {"tag": "c:wires/lead"}
+  ],
+  "result": {"id": "immersive_munitions:projectile_58x42", "count": 1}
+}

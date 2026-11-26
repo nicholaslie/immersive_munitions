@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {"tag": "c:plates/copper"},
+    "d": {"tag": "c:dyes/blue"},
+    "p": {"tag": "c:paper"}
+  },
+  "pattern": ["B  ", "ddd", "ppp"],
+  "result": {"id": "immersiveengineering:blueprint", "components": {"immersiveengineering:blueprint": "shotgun_projectiles"}},
+  "show_notification": true
+}

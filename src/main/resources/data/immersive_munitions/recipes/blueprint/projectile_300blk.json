@@ -1,9 +1,0 @@
-{
-  "type": "immersiveengineering:blueprint",
-  "category": "rifle_projectiles",
-  "inputs": [
-    {"tag": "forge:plates/copper"},
-    {"tag": "forge:wires/lead"}
-  ],
-  "result": {"item": "immersive_munitions:projectile_300blk", "count": 1}
-}

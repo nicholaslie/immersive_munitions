@@ -1,18 +1,16 @@
 package dev.immersive_munitions.crafting;
 
-import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.crafting.MultiblockRecipe;
+import blusunrize.immersiveengineering.api.crafting.TagOutput;
+import blusunrize.immersiveengineering.api.crafting.TagOutputList;
 import blusunrize.immersiveengineering.api.crafting.cache.CachedRecipeList;
 import dev.immersive_munitions.registry.ModRecipes;
 import dev.immersive_munitions.tacz.TaczAmmoStacks;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -20,6 +18,8 @@ import java.util.List;
 /** Ammo assembler recipe: one casing, filled with gunpowder, then pressed together with a projectile. */
 public class AmmoAssemblyRecipe extends MultiblockRecipe {
     public static final CachedRecipeList<AmmoAssemblyRecipe> RECIPES = new CachedRecipeList<>(ModRecipes.AMMO_ASSEMBLY);
+    // IE scales its machines' time and energy by config; the assembler has no such config, so it runs as written
+    private static final RecipeMultiplier AS_WRITTEN = new RecipeMultiplier(() -> 1, () -> 1);
 
     public final IngredientWithSize casing;
     public final IngredientWithSize projectile;
@@ -28,45 +28,30 @@ public class AmmoAssemblyRecipe extends MultiblockRecipe {
     public final int count;
     // Don't draw the projectile on the casing between feeder and press (shotshells: the shot goes inside the hull)
     public final boolean hideProjectile;
-    private final int time;
-    private final int energy;
 
-    public AmmoAssemblyRecipe(ResourceLocation id, IngredientWithSize casing, IngredientWithSize projectile,
-                              IngredientWithSize gunpowder, String ammoId, int count, int time, int energy,
-                              boolean hideProjectile) {
-        super(Lazy.of(() -> TaczAmmoStacks.create(ammoId, count)), ModRecipes.AMMO_ASSEMBLY, id);
+    public AmmoAssemblyRecipe(IngredientWithSize casing, IngredientWithSize projectile, IngredientWithSize gunpowder,
+                              String ammoId, int count, int time, int energy, boolean hideProjectile) {
+        super(new TagOutput(TaczAmmoStacks.create(ammoId, count)), ModRecipes.AMMO_ASSEMBLY, time, energy, () -> AS_WRITTEN);
         this.casing = casing;
         this.projectile = projectile;
         this.gunpowder = gunpowder;
         this.ammoId = ammoId;
         this.count = count;
-        this.time = time;
-        this.energy = energy;
         this.hideProjectile = hideProjectile;
 
         setInputListWithSizes(List.of(casing, projectile, gunpowder));
-        outputList = Lazy.of(() -> NonNullList.of(ItemStack.EMPTY, TaczAmmoStacks.create(ammoId, count)));
-        fluidInputList = List.<FluidTagInput>of();
-        fluidOutputList = List.<FluidStack>of();
+        outputList = new TagOutputList(new TagOutput(TaczAmmoStacks.create(ammoId, count)));
+        fluidInputList = List.of();
+        fluidOutputList = List.of();
     }
 
     @Nullable
-    public static AmmoAssemblyRecipe findForCasing(Level level, ItemStack casingStack) {
+    public static RecipeHolder<AmmoAssemblyRecipe> findForCasing(Level level, ItemStack casingStack) {
         if (casingStack.isEmpty()) return null;
-        for (AmmoAssemblyRecipe recipe : RECIPES.getRecipes(level)) {
-            if (recipe.casing.test(casingStack)) return recipe;
+        for (RecipeHolder<AmmoAssemblyRecipe> recipe : RECIPES.getRecipes(level)) {
+            if (recipe.value().casing.test(casingStack)) return recipe;
         }
         return null;
-    }
-
-    @Override
-    public int getTotalProcessTime() {
-        return time;
-    }
-
-    @Override
-    public int getTotalProcessEnergy() {
-        return energy;
     }
 
     @Override

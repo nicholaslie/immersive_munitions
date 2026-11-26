@@ -1,5 +1,5 @@
 {
-  "loader": "forge:obj",
+  "loader": "neoforge:obj",
   "model": "immersive_munitions:models/block/ammo_assembler_fingers_left.obj",
   "flip_v": true,
   "automatic_culling": false,

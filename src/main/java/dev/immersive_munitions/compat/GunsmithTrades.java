@@ -11,8 +11,11 @@ import net.minecraft.world.entity.npc.VillagerTrades.ItemListing;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -73,14 +76,14 @@ public final class GunsmithTrades {
     /** Sells one of our blueprints for a random price in [min, max] emeralds; one per restock, like IE's. */
     private static ItemListing blueprint(String category, int min, int max, int xp) {
         return (trader, random) -> new MerchantOffer(
-                new ItemStack(Items.EMERALD, min + random.nextInt(max - min + 1)),
+                new ItemCost(Items.EMERALD, min + random.nextInt(max - min + 1)),
                 BlueprintCraftingRecipe.getTypedBlueprint(category), 1, xp, 0.2f);
     }
 
     /** Buys [min, max] of an item for one emerald. */
     private static ItemListing buy(Supplier<Item> item, int min, int max, int uses, int xp) {
         return (trader, random) -> new MerchantOffer(
-                new ItemStack(item.get(), min + random.nextInt(max - min + 1)),
+                new ItemCost(item.get(), min + random.nextInt(max - min + 1)),
                 new ItemStack(Items.EMERALD), uses, xp, 0.05f);
     }
 
@@ -92,7 +95,7 @@ public final class GunsmithTrades {
     private static Item brassIngot() {
         Item ours = ModItems.BRASS_INGOT.get();
         if (!MaterialCompat.isHidden(ours)) return ours;
-        Item create = ForgeRegistries.ITEMS.getValue(ResourceLocation.fromNamespaceAndPath(MaterialCompat.CREATE, "brass_ingot"));
+        Item create = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MaterialCompat.CREATE, "brass_ingot"));
         return create == null || create == Items.AIR ? ours : create;
     }
 

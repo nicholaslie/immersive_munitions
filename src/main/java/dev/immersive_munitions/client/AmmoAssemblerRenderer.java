@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -34,13 +35,14 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.model.IQuadTransformer;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +57,7 @@ import java.util.WeakHashMap;
  * Coordinates are in the model's frame (block units from the master block's corner): the belt runs along x from -1
  * to 2 at z = 1.5, its top at y = 0.125, with the stations at x = -0.5, 0.5 and 1.5.
  */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBlockEntityMaster<State>> {
     // Moving parts. The sight glass switches art: the empty glass is one tile right on the 128px sheet
     private static final ResourceLocation POWDER = part("powder"), WHEEL = part("wheel"),
@@ -104,7 +106,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
 
     @SubscribeEvent
     public static void onRegisterModels(ModelEvent.RegisterAdditional event) {
-        for (ResourceLocation model : List.of(POWDER, WHEEL, FINGERS_LEFT, FINGERS_RIGHT, PRESS, SIGHT, TUBE, BLOCKS)) event.register(model);
+        for (ResourceLocation model : List.of(POWDER, WHEEL, FINGERS_LEFT, FINGERS_RIGHT, PRESS, SIGHT, TUBE, BLOCKS)) event.register(ModelResourceLocation.standalone(model));
     }
 
     @SubscribeEvent
@@ -316,7 +318,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
     // A switched part drawn with its art moved one tile right on the sheet (the empty sight glass, translucent)
     private static void drawNextTile(ResourceLocation name, PoseStack pose, MultiBufferSource buffers, Rotation rotation,
                                      int light, int overlay) {
-        BakedModel model = Minecraft.getInstance().getModelManager().getModel(name);
+        BakedModel model = Minecraft.getInstance().getModelManager().getModel(ModelResourceLocation.standalone(name));
         VertexConsumer out = buffers.getBuffer(RenderType.translucent());
         int[] lights = {light, light, light, light};
         for (BakedQuad quad : model.getQuads(null, null, RandomSource.create(42), ModelData.EMPTY, null)) {
@@ -329,7 +331,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             }
             BakedQuad moved = new BakedQuad(vertices, quad.getTintIndex(), quad.getDirection(), sprite, quad.isShade());
             float shade = !quad.isShade() ? 1 : shadeOf(rotation.rotate(quad.getDirection()));
-            out.putBulkData(pose.last(), moved, new float[]{shade, shade, shade, shade}, 1, 1, 1, lights, overlay, false);
+            out.putBulkData(pose.last(), moved, new float[]{shade, shade, shade, shade}, 1, 1, 1, 1, lights, overlay, false);
         }
     }
 
@@ -340,7 +342,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
 
     private static void drawPart(ResourceLocation name, float dx, float dy, PoseStack pose, MultiBufferSource buffers,
                                  Rotation rotation, int light, int overlay, RenderType layer) {
-        BakedModel model = Minecraft.getInstance().getModelManager().getModel(name);
+        BakedModel model = Minecraft.getInstance().getModelManager().getModel(ModelResourceLocation.standalone(name));
         // fetch the buffer each time: drawing an item in between ends it, and reusing it corrupts the frame
         VertexConsumer out = buffers.getBuffer(layer);
         pose.pushPose();
@@ -351,7 +353,7 @@ public class AmmoAssemblerRenderer implements BlockEntityRenderer<MultiblockBloc
             // shade by face direction, like the block model (the item sheet's shader shades by itself)
             boolean shaded = quad.isShade() && layer != Sheets.translucentCullBlockSheet();
             float shade = shaded ? shadeOf(rotation.rotate(quad.getDirection())) : 1;
-            out.putBulkData(pose.last(), quad, new float[]{shade, shade, shade, shade}, 1, 1, 1, lights, overlay, false);
+            out.putBulkData(pose.last(), quad, new float[]{shade, shade, shade, shade}, 1, 1, 1, 1, lights, overlay, false);
         }
         pose.popPose();
     }

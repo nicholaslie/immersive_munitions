@@ -1,7 +1,0 @@
-{
-  "type": "immersive_munitions:ammo_assembly",
-  "casing": {"item": "immersive_munitions:empty_casing_68x51fury"},
-  "projectile": {"item": "immersive_munitions:projectile_68x51fury"},
-  "gunpowder": {"tag": "forge:gunpowder"},
-  "result": {"ammo": "68x51fury", "count": 1}
-}

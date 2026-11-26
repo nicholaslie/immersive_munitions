@@ -9,7 +9,7 @@ import java.util.Map;
 
 /*
  * Writes the recipes that make cartridge parts, all IE data, no code:
- *   - metal press: each caliber's mold presses a brass ingot (forge:ingots/brass) into that caliber's casings, like
+ *   - metal press: each caliber's mold presses a brass ingot (c:ingots/brass) into that caliber's casings, like
  *     IE's copper ingot to casings (the 40mm grenade's from aluminium, CASING_METAL); yields go by size (CASINGS)
  *   - Engineer's Workbench, mold blueprints: each mold from 3 steel plates and a wire cutter, like IE's own molds
  *   - Engineer's Workbench, projectile blueprints: each caliber's projectiles assembled like real bullets, a lead core
@@ -26,13 +26,13 @@ import java.util.Map;
  */
 public class CasingRecipes {
     static final String MOD = "immersive_munitions";
-    static final Path RECIPES = Path.of("src/main/resources/data/" + MOD + "/recipes");
+    static final Path RECIPES = Path.of("src/main/resources/data/" + MOD + "/recipe");
     static final int PRESS_ENERGY = 2400;    // IE's own press recipes
     static final int MAX_PER_BLUEPRINT = 12; // IE's workbench limit (see above)
 
     // Casings per brass ingot, by size: small pistol 4, big pistol 3, rifle and shotgun 2, heavy 1
     // Casings not pressed from brass: the 40mm grenade's case is aluminium, like real 40x46mm grenade cartridges
-    static final Map<String, String> CASING_METAL = Map.of("40mm", "forge:ingots/aluminum");
+    static final Map<String, String> CASING_METAL = Map.of("40mm", "c:ingots/aluminum");
 
     static final Map<String, Integer> CASINGS = new LinkedHashMap<>();
     static {
@@ -48,12 +48,12 @@ public class CasingRecipes {
     record Part(String tag, int count) {
         String json() {
             String ing = tag.startsWith("item:") ? "{\"item\": \"%s\"}".formatted(tag.substring(5)) : "{\"tag\": \"%s\"}".formatted(tag);
-            return count == 1 ? ing : "{\"base_ingredient\": %s, \"count\": %d}".formatted(ing, count);
+            return count == 1 ? ing : "{\"basePredicate\": %s, \"count\": %d}".formatted(ing, count);
         }
     }
     record Projectile(List<Part> inputs, int count) {}
-    static final Part COPPER_JACKET = new Part("forge:plates/copper", 1);
-    static Projectile jacketed(int wires, int count) { return new Projectile(List.of(COPPER_JACKET, new Part("forge:wires/lead", wires)), count); }
+    static final Part COPPER_JACKET = new Part("c:plates/copper", 1);
+    static Projectile jacketed(int wires, int count) { return new Projectile(List.of(COPPER_JACKET, new Part("c:wires/lead", wires)), count); }
     static final Map<String, Projectile> PROJECTILES = new LinkedHashMap<>();
     static {
         for (String c : new String[]{"9mm", "45acp", "357mag", "762x25", "22wmr", "57x28", "46x30"}) PROJECTILES.put(c, jacketed(1, 2));
@@ -62,16 +62,16 @@ public class CasingRecipes {
                 "792x57", "30_06", "45_70"}) PROJECTILES.put(c, jacketed(1, 1));
         for (String c : new String[]{"338", "50bmg"}) PROJECTILES.put(c, jacketed(2, 1));
         // armor-piercing: a hardened steel core (IE's steel wire) in the copper jacket, in place of lead
-        PROJECTILES.put("ap_ammo", new Projectile(List.of(COPPER_JACKET, new Part("forge:wires/steel", 1)), 1));
+        PROJECTILES.put("ap_ammo", new Projectile(List.of(COPPER_JACKET, new Part("c:wires/steel", 1)), 1));
         // 20mm cannon shell: a steel body with a copper driving band, filled with high explosive (gunpowder)
-        PROJECTILES.put("20mm", new Projectile(List.of(new Part("forge:plates/steel", 1), new Part("forge:plates/copper", 1),
-                new Part("forge:gunpowder", 1)), 1));
-        PROJECTILES.put("12g", new Projectile(List.of(new Part("forge:wires/lead", 1)), 1));       // bare lead shot
+        PROJECTILES.put("20mm", new Projectile(List.of(new Part("c:plates/steel", 1), new Part("c:plates/copper", 1),
+                new Part("c:gunpowders", 1)), 1));
+        PROJECTILES.put("12g", new Projectile(List.of(new Part("c:wires/lead", 1)), 1));       // bare lead shot
         // 40mm HEDP warhead, like the M433: a steel body (fragments), a copper shaped-charge liner, and a mechanical
         // impact fuze (IE's Iron Mechanical Component), filled with high explosive (gunpowder). The Ammunition
         // Assembler's gunpowder is the propellant in the case
-        PROJECTILES.put("40mm", new Projectile(List.of(new Part("forge:plates/steel", 1), new Part("forge:plates/copper", 1),
-                new Part("item:immersiveengineering:component_iron", 1), new Part("forge:gunpowder", 1)), 1));
+        PROJECTILES.put("40mm", new Projectile(List.of(new Part("c:plates/steel", 1), new Part("c:plates/copper", 1),
+                new Part("item:immersiveengineering:component_iron", 1), new Part("c:gunpowders", 1)), 1));
     }
 
     // Gun types: the calibers on each, and the top crafting row of its blueprints (B = brass plate for the molds,
@@ -98,10 +98,10 @@ public class CasingRecipes {
                       "type": "immersiveengineering:metal_press",
                       "input": {"tag": "%s"},
                       "mold": "%s:mold_casing_%s",
-                      "result": {"item": "%s:empty_casing_%s", "count": %d},
+                      "result": {"id": "%s:empty_casing_%s", "count": %d},
                       "energy": %d
                     }
-                    """.formatted(CASING_METAL.getOrDefault(c, "forge:ingots/brass"), MOD, c, MOD, c, e.getValue(), PRESS_ENERGY));
+                    """.formatted(CASING_METAL.getOrDefault(c, "c:ingots/brass"), MOD, c, MOD, c, e.getValue(), PRESS_ENERGY));
             n++;
         }
         // the blueprints, by gun type
@@ -116,10 +116,10 @@ public class CasingRecipes {
                           "type": "immersiveengineering:blueprint",
                           "category": "%s",
                           "inputs": [
-                            {"base_ingredient": {"tag": "forge:plates/steel"}, "count": 3},
+                            {"basePredicate": {"tag": "c:plates/steel"}, "count": 3},
                             {"item": "immersiveengineering:wirecutter"}
                           ],
-                          "result": {"item": "%s:mold_casing_%s"}
+                          "result": {"id": "%s:mold_casing_%s"}
                         }
                         """.formatted(moldCategory, MOD, c));
                 Projectile p = PROJECTILES.get(c);
@@ -133,15 +133,15 @@ public class CasingRecipes {
                           "inputs": [
                             %s
                           ],
-                          "result": {"item": "%s:projectile_%s", "count": %d}
+                          "result": {"id": "%s:projectile_%s", "count": %d}
                         }
                         """.formatted(projectileCategory, String.join(",\n    ", inputs), MOD, c, p.count()));
                 n += 2;
                 molds++;
                 projectiles++;
             }
-            n += blueprintRecipe(moldCategory, type.topRow(), "{\"tag\": \"forge:plates/brass\"}");
-            n += blueprintRecipe(projectileCategory, type.topRow(), "{\"tag\": \"forge:plates/copper\"}");
+            n += blueprintRecipe(moldCategory, type.topRow(), "{\"tag\": \"c:plates/brass\"}");
+            n += blueprintRecipe(projectileCategory, type.topRow(), "{\"tag\": \"c:plates/copper\"}");
         }
         if (molds != CASINGS.size() || projectiles != PROJECTILES.size())
             throw new IllegalStateException("blueprints cover " + molds + " molds and " + projectiles + " projectiles, not " + CASINGS.size());
@@ -160,16 +160,16 @@ public class CasingRecipes {
      */
     static final String ARMORER = "immersive_armorer";
     static String ammo(String id, int count) {
-        return "{\"item\": \"tacz:ammo\", \"nbt\": \"{AmmoId:\\\"%s:%s\\\"}\", \"count\": %d}".formatted(ARMORER, id, count);
+        return "{\"id\": \"tacz:ammo\", \"count\": %d, \"components\": {\"minecraft:custom_data\": {\"AmmoId\": \"%s:%s\"}}}".formatted(count, ARMORER, id);
     }
     record Cell(String id, List<Part> inputs, int count) {}
     static final List<Cell> CELLS = List.of(
-            new Cell("burst_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/copper", 2),
-                    new Part("forge:dusts/redstone", 3)), 5),
-            new Cell("stream_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/electrum", 2),
-                    new Part("forge:dusts/redstone", 2)), 5),
-            new Cell("high_power_capacitor", List.of(new Part("forge:glass", 2), new Part("forge:wires/electrum", 2),
-                    new Part("item:immersiveengineering:electron_tube", 1), new Part("forge:dusts/redstone", 3)), 3));
+            new Cell("burst_capacitor", List.of(new Part("c:glass_blocks", 2), new Part("c:wires/copper", 2),
+                    new Part("c:dusts/redstone", 3)), 5),
+            new Cell("stream_capacitor", List.of(new Part("c:glass_blocks", 2), new Part("c:wires/electrum", 2),
+                    new Part("c:dusts/redstone", 2)), 5),
+            new Cell("high_power_capacitor", List.of(new Part("c:glass_blocks", 2), new Part("c:wires/electrum", 2),
+                    new Part("item:immersiveengineering:electron_tube", 1), new Part("c:dusts/redstone", 3)), 3));
     static final Map<String, Integer> CHEMICAL_FUELS = new LinkedHashMap<>();
     static { CHEMICAL_FUELS.put("creosote", 250); CHEMICAL_FUELS.put("ethanol", 250); CHEMICAL_FUELS.put("biodiesel", 125); }
 
@@ -178,7 +178,7 @@ public class CasingRecipes {
         write("metal_press/cut_steel_rod", """
                 {
                   "type": "immersiveengineering:metal_press",
-                  "input": {"tag": "forge:rods/steel"},
+                  "input": {"tag": "c:rods/steel"},
                   "mold": "immersiveengineering:mold_rod",
                   "result": %s,
                   "energy": %d
@@ -206,7 +206,7 @@ public class CasingRecipes {
                     {
                       "type": "immersiveengineering:bottling_machine",
                       "input": {"item": "minecraft:glass_bottle"},
-                      "fluid": {"tag": "forge:%s", "amount": %d},
+                      "fluid": {"tag": "c:%s", "amount": %d},
                       "results": [%s]
                     }
                     """.formatted(fuel.getKey(), fuel.getValue(), ammo("chemical", 4)));
@@ -222,11 +222,11 @@ public class CasingRecipes {
                   "category": "misc",
                   "key": {
                     "B": %s,
-                    "d": {"tag": "forge:dyes/blue"},
-                    "p": {"item": "minecraft:paper"}
+                    "d": {"tag": "c:dyes/blue"},
+                    "p": {"tag": "c:paper"}
                   },
                   "pattern": ["%s", "ddd", "ppp"],
-                  "result": {"item": "immersiveengineering:blueprint", "nbt": {"blueprint": "%s"}},
+                  "result": {"id": "immersiveengineering:blueprint", "components": {"immersiveengineering:blueprint": "%s"}},
                   "show_notification": true
                 }
                 """.formatted(topIngredient, topRow, category));

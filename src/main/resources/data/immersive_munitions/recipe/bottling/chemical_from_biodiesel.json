@@ -1,0 +1,6 @@
+{
+  "type": "immersiveengineering:bottling_machine",
+  "input": {"item": "minecraft:glass_bottle"},
+  "fluid": {"tag": "c:biodiesel", "amount": 125},
+  "results": [{"id": "tacz:ammo", "count": 4, "components": {"minecraft:custom_data": {"AmmoId": "immersive_armorer:chemical"}}}]
+}

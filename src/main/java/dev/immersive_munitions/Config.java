@@ -1,21 +1,21 @@
 package dev.immersive_munitions;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * Common config: whether zinc ore generates and whether it steps aside for Immersive Geology or Create, and which
  * other mods' recipes are switched off (TaCZ's ammo, IE's guns).
  */
 public final class Config {
-    public static final ForgeConfigSpec SPEC;
-    public static final ForgeConfigSpec.BooleanValue ZINC_WORLDGEN;
-    public static final ForgeConfigSpec.BooleanValue YIELD_TO_GEOLOGY;
-    public static final ForgeConfigSpec.BooleanValue YIELD_TO_CREATE;
-    public static final ForgeConfigSpec.BooleanValue REMOVE_TACZ_AMMO;
-    public static final ForgeConfigSpec.BooleanValue REMOVE_IE_WEAPONS;
+    public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.BooleanValue ZINC_WORLDGEN;
+    public static final ModConfigSpec.BooleanValue YIELD_TO_GEOLOGY;
+    public static final ModConfigSpec.BooleanValue YIELD_TO_CREATE;
+    public static final ModConfigSpec.BooleanValue REMOVE_TACZ_AMMO;
+    public static final ModConfigSpec.BooleanValue REMOVE_IE_WEAPONS;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.push("zinc_worldgen");
         ZINC_WORLDGEN = builder

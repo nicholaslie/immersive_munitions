@@ -1,0 +1,7 @@
+{
+  "type": "immersiveengineering:metal_press",
+  "input": {"tag": "c:rods/steel"},
+  "mold": "immersiveengineering:mold_rod",
+  "result": {"id": "tacz:ammo", "count": 4, "components": {"minecraft:custom_data": {"AmmoId": "immersive_armorer:cut_steel_rod"}}},
+  "energy": 2400
+}

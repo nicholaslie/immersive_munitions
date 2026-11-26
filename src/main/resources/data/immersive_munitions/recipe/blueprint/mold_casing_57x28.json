@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "pistol_casing_molds",
+  "inputs": [
+    {"basePredicate": {"tag": "c:plates/steel"}, "count": 3},
+    {"item": "immersiveengineering:wirecutter"}
+  ],
+  "result": {"id": "immersive_munitions:mold_casing_57x28"}
+}

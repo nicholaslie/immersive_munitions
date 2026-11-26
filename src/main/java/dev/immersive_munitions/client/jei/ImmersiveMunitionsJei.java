@@ -17,6 +17,7 @@ import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class ImmersiveMunitionsJei implements IModPlugin {
     public void registerRecipes(IRecipeRegistration registration) {
         var level = Minecraft.getInstance().level;
         if (level == null) return;
-        registration.addRecipes(AmmoAssemblyCategory.TYPE, List.copyOf(AmmoAssemblyRecipe.RECIPES.getRecipes(level)));
+        registration.addRecipes(AmmoAssemblyCategory.TYPE, AmmoAssemblyRecipe.RECIPES.getRecipes(level).stream().map(RecipeHolder::value).toList());
     }
 
     @Override

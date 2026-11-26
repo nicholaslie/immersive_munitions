@@ -1,6 +1,6 @@
 package dev.immersive_munitions.compat;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.immersive_munitions.Config;
 import dev.immersive_munitions.ImmersiveMunitions;
@@ -9,15 +9,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraftforge.common.loot.IGlobalLootModifier;
-import net.minecraftforge.common.loot.LootModifier;
-import net.minecraftforge.event.village.VillagerTradesEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.common.loot.LootModifier;
+import net.neoforged.neoforge.event.village.VillagerTradesEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.List;
 
@@ -27,14 +29,14 @@ import java.util.List;
  * bullets, blueprints and revolver parts and buys empty casings.
  */
 public final class RemovedWeaponLoot {
-    public static final DeferredRegister<Codec<? extends IGlobalLootModifier>> LOOT_MODIFIERS =
-            DeferredRegister.create(ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, ImmersiveMunitions.MODID);
-    public static final RegistryObject<Codec<Modifier>> REMOVE_IE_WEAPONS =
+    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> LOOT_MODIFIERS =
+            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, ImmersiveMunitions.MODID);
+    public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<Modifier>> REMOVE_IE_WEAPONS =
             LOOT_MODIFIERS.register("remove_ie_weapons", () -> Modifier.CODEC);
 
-    /** Drops the removed IE items from any generated loot (data/forge/loot_modifiers/global_loot_modifiers.json). */
+    /** Drops the removed IE items from any generated loot (data/neoforge/loot_modifiers/global_loot_modifiers.json). */
     public static final class Modifier extends LootModifier {
-        static final Codec<Modifier> CODEC = RecordCodecBuilder.create(inst -> codecStart(inst).apply(inst, Modifier::new));
+        static final MapCodec<Modifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).apply(inst, Modifier::new));
 
         Modifier(LootItemCondition[] conditions) {
             super(conditions);
@@ -47,7 +49,7 @@ public final class RemovedWeaponLoot {
         }
 
         @Override
-        public Codec<? extends IGlobalLootModifier> codec() {
+        public MapCodec<? extends IGlobalLootModifier> codec() {
             return REMOVE_IE_WEAPONS.get();
         }
     }
@@ -57,11 +59,11 @@ public final class RemovedWeaponLoot {
      * added). Runs after IE has added its Gunsmith trades; the config is checked when the offer is made. The Gunsmith
      * itself is reworked first (GunsmithTrades).
      */
-    @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID)
+    @EventBusSubscriber(modid = ImmersiveMunitions.MODID)
     public static final class Trades {
         @SubscribeEvent(priority = EventPriority.LOWEST)
         public static void onVillagerTrades(VillagerTradesEvent event) {
-            var profession = ForgeRegistries.VILLAGER_PROFESSIONS.getKey(event.getType());
+            var profession = BuiltInRegistries.VILLAGER_PROFESSION.getKey(event.getType());
             if (GunsmithTrades.GUNSMITH.equals(profession)) GunsmithTrades.rework(event.getTrades(), Config.REMOVE_IE_WEAPONS.get());
             event.getTrades().values().forEach(Trades::wrap);
         }

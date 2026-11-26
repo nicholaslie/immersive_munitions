@@ -1,7 +1,0 @@
-{
-  "type": "immersiveengineering:metal_press",
-  "input": {"tag": "forge:rods/steel"},
-  "mold": "immersiveengineering:mold_rod",
-  "result": {"item": "tacz:ammo", "nbt": "{AmmoId:\"immersive_armorer:cut_steel_rod\"}", "count": 4},
-  "energy": 2400
-}

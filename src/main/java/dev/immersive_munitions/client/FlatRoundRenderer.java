@@ -8,26 +8,32 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.extensions.common.ClientExtensionsManager;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * With our icon pack on, TaCZ rounds in the world (dropped, held, on conveyors) are drawn as flat items with our art
  * instead of TaCZ's 3D model. Inventory icons, and everything with the pack off, stay TaCZ's.
  */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
     private static final List<String> ROUNDS = List.of(
             "12g", "22wmr", "300blk", "308", "30_06", "338", "357mag", "40mm", "45_70", "45acp",
@@ -50,12 +56,14 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
         ARMORER_ROUNDS.forEach(id -> event.register(model(id)));
     }
 
-    // TaCZ's ammo item gets its renderer from initializeClient; wrap it so we can step in for world rendering
+    // TaCZ registers its ammo item's renderer as a client extension; swap in a wrapper so we can step in for world
+    // rendering. NeoForge keeps the extensions in a package-private map, hence the reflection
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            Item ammo = ForgeRegistries.ITEMS.getValue(ResourceLocation.fromNamespaceAndPath("tacz", "ammo"));
-            if (ammo == null || !(ammo.getRenderPropertiesInternal() instanceof IClientItemExtensions original)) return;
+            Item ammo = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("tacz", "ammo"));
+            IClientItemExtensions original = IClientItemExtensions.of(ammo);
+            if (original == IClientItemExtensions.DEFAULT) return;
 
             FlatRoundRenderer renderer = new FlatRoundRenderer(original);
             IClientItemExtensions wrapped = new IClientItemExtensions() {
@@ -64,7 +72,9 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
                     return renderer;
                 }
             };
-            ObfuscationReflectionHelper.setPrivateValue(Item.class, ammo, wrapped, "renderProperties");
+            Map<Item, IClientItemExtensions> extensions =
+                    ObfuscationReflectionHelper.getPrivateValue(ClientExtensionsManager.class, null, "ITEM_EXTENSIONS");
+            if (extensions != null) extensions.put(ammo, wrapped);
         });
     }
 
@@ -105,7 +115,7 @@ public final class FlatRoundRenderer extends BlockEntityWithoutLevelRenderer {
         return model == mc.getModelManager().getMissingModel() ? null : model;
     }
 
-    private static ResourceLocation model(String round) {
-        return ResourceLocation.fromNamespaceAndPath(ImmersiveMunitions.MODID, "item/tacz_round/" + round);
+    private static ModelResourceLocation model(String round) {
+        return ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(ImmersiveMunitions.MODID, "item/tacz_round/" + round));
     }
 }

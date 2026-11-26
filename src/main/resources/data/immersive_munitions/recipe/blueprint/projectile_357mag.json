@@ -1,0 +1,9 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "pistol_projectiles",
+  "inputs": [
+    {"tag": "c:plates/copper"},
+    {"tag": "c:wires/lead"}
+  ],
+  "result": {"id": "immersive_munitions:projectile_357mag", "count": 2}
+}

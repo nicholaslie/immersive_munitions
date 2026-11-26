@@ -8,20 +8,24 @@ import dev.immersive_munitions.Config;
 import dev.immersive_munitions.ImmersiveMunitions;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
+import blusunrize.immersiveengineering.api.IEApiDataComponents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.TagsUpdatedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.TagsUpdatedEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
@@ -42,7 +46,7 @@ import java.util.function.Predicate;
  * The removed IE items stay registered (old worlds keep them) but are hidden from IE's creative tab and from JEI.
  * Without the Immersive Armorer gun pack, every recipe for its ammo and our parts for it goes too (ArmorerCompat).
  */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID)
+@EventBusSubscriber(modid = ImmersiveMunitions.MODID)
 public final class RemovedRecipes {
     private static final Logger LOG = LogUtils.getLogger();
     private static final String IE = "immersiveengineering";
@@ -72,12 +76,13 @@ public final class RemovedRecipes {
         boolean noArmorer = !ArmorerCompat.packLoaded(false);   // without the gun pack, our recipes for it go too
         if (!tacz && !ie && !noArmorer) return;
         RegistryAccess access = event.getRegistryAccess();
-        List<Recipe<?>> kept = new ArrayList<>();
+        List<RecipeHolder<?>> kept = new ArrayList<>();
         int removed = 0;
-        for (Recipe<?> recipe : recipeManager.getRecipes()) {
+        for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+            Recipe<?> recipe = holder.value();
             if ((tacz && isTaczAmmo(recipe)) || (ie && makes(recipe, access, RemovedRecipes::isIeWeaponStack))
                     || (noArmorer && makes(recipe, access, ArmorerCompat::isArmorerStack))) removed++;
-            else kept.add(recipe);
+            else kept.add(holder);
         }
         if (removed > 0) {
             recipeManager.replaceRecipes(kept);
@@ -112,8 +117,7 @@ public final class RemovedRecipes {
     public static boolean isIeWeaponStack(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (ieWeaponItems().contains(stack.getItem())) return true;
-        CompoundTag tag = stack.getTag();
-        return stack.getItem() == IEItems.Misc.BLUEPRINT.asItem() && tag != null && BULLET_BLUEPRINTS.contains(tag.getString("blueprint"));
+        return stack.getItem() == IEItems.Misc.BLUEPRINT.asItem() && BULLET_BLUEPRINTS.contains(IEApiDataComponents.getBlueprintType(stack));
     }
 
     private static final Set<String> BULLET_BLUEPRINTS = Set.of("bullet", "specialBullet");
@@ -122,8 +126,8 @@ public final class RemovedRecipes {
         if (ieWeaponItems == null) {
             Set<Item> set = new HashSet<>();
             for (String id : IE_WEAPON_ITEMS) {
-                Item item = ForgeRegistries.ITEMS.getValue(ResourceLocation.fromNamespaceAndPath(IE, id));
-                if (item != null && ForgeRegistries.ITEMS.getKey(item).getNamespace().equals(IE)) set.add(item);
+                Item item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(IE, id));
+                if (item != null && BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(IE)) set.add(item);
                 else LOG.warn("Immersive Engineering item {} not found", id);
             }
             IEItems.Weapons.BULLETS.values().forEach(bullet -> set.add(bullet.asItem()));
@@ -133,14 +137,15 @@ public final class RemovedRecipes {
     }
 
     /** Takes the removed IE items out of IE's creative tab. */
-    @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = ImmersiveMunitions.MODID, bus = EventBusSubscriber.Bus.MOD)
     public static final class CreativeTab {
         @SubscribeEvent
         public static void onBuildTab(BuildCreativeModeTabContentsEvent event) {
             if (!event.getTabKey().equals(IE_TAB) || !Config.REMOVE_IE_WEAPONS.get()) return;
             List<ItemStack> hidden = new ArrayList<>();
-            for (var entry : event.getEntries()) if (isIeWeaponStack(entry.getKey())) hidden.add(entry.getKey());
-            for (ItemStack stack : hidden) event.getEntries().remove(stack);
+            for (ItemStack stack : event.getParentEntries()) if (isIeWeaponStack(stack)) hidden.add(stack);
+            for (ItemStack stack : event.getSearchEntries()) if (isIeWeaponStack(stack) && !hidden.contains(stack)) hidden.add(stack);
+            for (ItemStack stack : hidden) event.remove(stack, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
         }
     }
 

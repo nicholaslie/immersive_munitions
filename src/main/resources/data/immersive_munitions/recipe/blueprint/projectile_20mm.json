@@ -1,0 +1,10 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "immersive_armorer_projectiles",
+  "inputs": [
+    {"tag": "c:plates/steel"},
+    {"tag": "c:plates/copper"},
+    {"tag": "c:gunpowders"}
+  ],
+  "result": {"id": "immersive_munitions:projectile_20mm", "count": 1}
+}

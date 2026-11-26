@@ -96,7 +96,7 @@
   ],
   "inner_model": {
     "parent": "minecraft:block/block",
-    "loader": "forge:obj",
+    "loader": "neoforge:obj",
     "model": "immersive_munitions:models/block/ammo_assembler.obj",
     "flip_v": true,
     "automatic_culling": false,

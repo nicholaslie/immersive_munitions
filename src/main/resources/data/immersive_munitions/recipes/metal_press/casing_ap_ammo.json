@@ -1,7 +1,0 @@
-{
-  "type": "immersiveengineering:metal_press",
-  "input": {"tag": "forge:ingots/brass"},
-  "mold": "immersive_munitions:mold_casing_ap_ammo",
-  "result": {"item": "immersive_munitions:empty_casing_ap_ammo", "count": 2},
-  "energy": 2400
-}

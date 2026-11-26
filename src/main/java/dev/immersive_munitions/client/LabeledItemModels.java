@@ -3,15 +3,19 @@ package dev.immersive_munitions.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.immersive_munitions.ImmersiveMunitions;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.model.BakedModelWrapper;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.model.BakedModelWrapper;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
@@ -20,19 +24,19 @@ import java.util.Map;
  * Caliber labels in inventories only: casings, projectiles and molds use their plain model everywhere except the GUI,
  * where the labeled one from models/item/labeled/ is swapped in (both made by art/labels/Labels.java).
  */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class LabeledItemModels {
     private static final List<String> PREFIXES = List.of("empty_casing_", "projectile_", "mold_casing_");
 
     private static List<ResourceLocation> items() {
-        return ForgeRegistries.ITEMS.getKeys().stream()
+        return BuiltInRegistries.ITEM.keySet().stream()
                 .filter(id -> id.getNamespace().equals(ImmersiveMunitions.MODID))
                 .filter(id -> PREFIXES.stream().anyMatch(id.getPath()::startsWith))
                 .toList();
     }
 
-    private static ResourceLocation labeled(ResourceLocation item) {
-        return ResourceLocation.fromNamespaceAndPath(item.getNamespace(), "item/labeled/" + item.getPath());
+    private static ModelResourceLocation labeled(ResourceLocation item) {
+        return ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(item.getNamespace(), "item/labeled/" + item.getPath()));
     }
 
     @SubscribeEvent
@@ -42,10 +46,10 @@ public final class LabeledItemModels {
 
     @SubscribeEvent
     public static void onModifyBakingResult(ModelEvent.ModifyBakingResult event) {
-        Map<ResourceLocation, BakedModel> models = event.getModels();
-        BakedModel missing = models.get(ModelResourceLocation.vanilla("builtin/missing", "missing"));
+        Map<ModelResourceLocation, BakedModel> models = event.getModels();
+        BakedModel missing = models.get(ModelBakery.MISSING_MODEL_VARIANT);
         for (ResourceLocation item : items()) {
-            ModelResourceLocation key = new ModelResourceLocation(item, "inventory");
+            ModelResourceLocation key = ModelResourceLocation.inventory(item);
             BakedModel plain = models.get(key);
             BakedModel label = models.get(labeled(item));
             if (plain == null || label == null || label == missing) continue;

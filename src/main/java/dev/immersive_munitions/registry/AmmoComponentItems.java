@@ -3,9 +3,11 @@ package dev.immersive_munitions.registry;
 import dev.immersive_munitions.ImmersiveMunitions;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +19,7 @@ import java.util.stream.Stream;
  * tacz:9mm, "454_casul" for immersive_armorer:454_casul); {@link #ammoId} gives the full id.
  */
 public final class AmmoComponentItems {
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ImmersiveMunitions.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, ImmersiveMunitions.MODID);
 
     /** TaCZ's default gun pack. */
     public static final List<String> TACZ_CALIBERS = List.of(
@@ -34,9 +36,9 @@ public final class AmmoComponentItems {
                 ARMORER_CALIBERS.contains(caliber) ? "immersive_armorer" : "tacz", caliber);
     }
 
-    public static final Map<String, RegistryObject<Item>> EMPTY_CASINGS = new LinkedHashMap<>();
-    public static final Map<String, RegistryObject<Item>> PROJECTILES = new LinkedHashMap<>();
-    public static final Map<String, RegistryObject<Item>> CASING_MOLDS = new LinkedHashMap<>();
+    public static final Map<String, DeferredHolder<Item, Item>> EMPTY_CASINGS = new LinkedHashMap<>();
+    public static final Map<String, DeferredHolder<Item, Item>> PROJECTILES = new LinkedHashMap<>();
+    public static final Map<String, DeferredHolder<Item, Item>> CASING_MOLDS = new LinkedHashMap<>();
 
     static {
         for (String caliber : CALIBERS) {
@@ -46,7 +48,7 @@ public final class AmmoComponentItems {
         }
     }
 
-    private static RegistryObject<Item> register(String id) {
+    private static DeferredHolder<Item, Item> register(String id) {
         return ITEMS.register(id, () -> new Item(new Item.Properties()));
     }
 

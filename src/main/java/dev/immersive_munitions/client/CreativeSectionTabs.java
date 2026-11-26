@@ -11,10 +11,11 @@ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +24,11 @@ import java.util.List;
  * Section buttons down the left side of the creative inventory while our tab is open.
  * Layout and tab sprites follow TaCZ's creative sidebar (GPLv3, see NOTICE.md).
  */
-@Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public final class CreativeSectionTabs {
-    private static final ResourceLocation TAB_TEXTURE = ResourceLocation.withDefaultNamespace("textures/gui/recipe_book.png");
+    // the recipe book's tab sprites (nine-sliced, so they stretch to our widths)
+    private static final ResourceLocation TAB = ResourceLocation.withDefaultNamespace("recipe_book/tab");
+    private static final ResourceLocation TAB_SELECTED = ResourceLocation.withDefaultNamespace("recipe_book/tab_selected");
     private static final int SPACING = 29;
     private static final List<SectionButton> buttons = new ArrayList<>();
 
@@ -84,8 +87,7 @@ public final class CreativeSectionTabs {
 
             RenderSystem.enableBlend();
             // Recipe book tab sprites: the selected one is the wider, raised variant
-            graphics.blitNineSliced(TAB_TEXTURE, getX(), getY(), selected ? 31 : 28, 26,
-                    3, selected ? 35 : 30, 26, selected ? 188 : 153, 2);
+            graphics.blitSprite(selected ? TAB_SELECTED : TAB, getX(), getY(), selected ? 31 : 28, 26);
             graphics.renderItem(icon, getX() + 8, getY() + 5);
 
             if (isHovered && Minecraft.getInstance().options.touchscreen().get()) {

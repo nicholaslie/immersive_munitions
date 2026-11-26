@@ -1,0 +1,8 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_762x25"},
+  "projectile": {"item": "immersive_munitions:projectile_762x25"},
+  "gunpowder": {"tag": "c:gunpowders"},
+  "ammo": "762x25",
+  "count": 1
+}

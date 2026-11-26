@@ -1,9 +1,0 @@
-{
-  "type": "immersiveengineering:blueprint",
-  "category": "pistol_projectiles",
-  "inputs": [
-    {"tag": "forge:plates/copper"},
-    {"base_ingredient": {"tag": "forge:wires/lead"}, "count": 2}
-  ],
-  "result": {"item": "immersive_munitions:projectile_500mag", "count": 3}
-}

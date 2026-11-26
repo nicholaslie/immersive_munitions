@@ -1,0 +1,8 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_45acp"},
+  "projectile": {"item": "immersive_munitions:projectile_45acp"},
+  "gunpowder": {"tag": "c:gunpowders"},
+  "ammo": "45acp",
+  "count": 1
+}

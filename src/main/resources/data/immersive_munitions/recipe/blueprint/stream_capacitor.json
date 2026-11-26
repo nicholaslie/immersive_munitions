@@ -1,0 +1,10 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "energy_cells",
+  "inputs": [
+    {"basePredicate": {"tag": "c:glass_blocks"}, "count": 2},
+    {"basePredicate": {"tag": "c:wires/electrum"}, "count": 2},
+    {"basePredicate": {"tag": "c:dusts/redstone"}, "count": 2}
+  ],
+  "result": {"id": "tacz:ammo", "count": 5, "components": {"minecraft:custom_data": {"AmmoId": "immersive_armorer:stream_capacitor"}}}
+}

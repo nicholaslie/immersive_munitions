@@ -4,13 +4,13 @@ import blusunrize.immersiveengineering.common.register.IEItems;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IAmmo;
 import dev.immersive_munitions.registry.AmmoComponentItems;
-import net.minecraft.nbt.CompoundTag;
+import blusunrize.immersiveengineering.api.IEApiDataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +48,7 @@ public final class ArmorerCompat {
         if (items == null) {
             Set<Item> set = new HashSet<>();
             for (String caliber : AmmoComponentItems.ARMORER_CALIBERS)
-                for (Map<String, RegistryObject<Item>> map : List.of(
+                for (Map<String, DeferredHolder<Item, Item>> map : List.of(
                         AmmoComponentItems.EMPTY_CASINGS, AmmoComponentItems.PROJECTILES, AmmoComponentItems.CASING_MOLDS))
                     set.add(map.get(caliber).get());
             items = set;
@@ -61,8 +61,7 @@ public final class ArmorerCompat {
         if (stack.isEmpty()) return false;
         if (items().contains(stack.getItem())) return true;
         if (stack.getItem() instanceof IAmmo ammo) return NAMESPACE.equals(ammo.getAmmoId(stack).getNamespace());
-        CompoundTag tag = stack.getTag();
-        return stack.getItem() == IEItems.Misc.BLUEPRINT.asItem() && tag != null && BLUEPRINTS.contains(tag.getString("blueprint"));
+        return stack.getItem() == IEItems.Misc.BLUEPRINT.asItem() && BLUEPRINTS.contains(IEApiDataComponents.getBlueprintType(stack));
     }
 
     private ArmorerCompat() {}

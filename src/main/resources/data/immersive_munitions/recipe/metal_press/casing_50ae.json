@@ -1,0 +1,7 @@
+{
+  "type": "immersiveengineering:metal_press",
+  "input": {"tag": "c:ingots/brass"},
+  "mold": "immersive_munitions:mold_casing_50ae",
+  "result": {"id": "immersive_munitions:empty_casing_50ae", "count": 3},
+  "energy": 2400
+}

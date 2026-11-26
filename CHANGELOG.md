@@ -6,6 +6,8 @@ Changes since the last release. The next version number follows from them: anyth
 
 ### Added
 
+- **Minecraft 1.21.1 (NeoForge):** the mod is ported to 1.21.1, for Immersive Engineering 12 and TaCZ 1.2.0 on NeoForge, with the same features as 0.4.0-beta. Its jar has the Minecraft version in the name (`immersive_munitions-1.21.1-<version>.jar`). Worlds from the 1.20.1 version don't carry over.
+
 ### Changed
 
 ### Fixed

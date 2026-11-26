@@ -1,0 +1,29 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:mod_loaded",
+        "modid": "create"
+      }
+    },
+    {
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:mod_loaded",
+        "modid": "immersivegeology"
+      }
+    }
+  ],
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "group": "zinc_ingot",
+  "ingredient": {
+    "item": "immersive_munitions:zinc_dust"
+  },
+  "result": {
+    "id": "immersive_munitions:zinc_ingot"
+  },
+  "experience": 0.7,
+  "cookingtime": 100
+}

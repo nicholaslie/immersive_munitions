@@ -14,7 +14,6 @@ import blusunrize.immersiveengineering.api.multiblocks.blocks.util.CapabilityPos
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.MultiblockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.RelativeBlockFace;
 import blusunrize.immersiveengineering.api.multiblocks.blocks.util.ShapeType;
-import blusunrize.immersiveengineering.api.multiblocks.blocks.util.StoredCapability;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.MultiblockProcess;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.MultiblockProcessor;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
@@ -25,7 +24,9 @@ import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
 import dev.immersive_munitions.registry.ModParticles;
 import dev.immersive_munitions.registry.ModSounds;
 import dev.immersive_munitions.registry.ModTags;
+import blusunrize.immersiveengineering.api.multiblocks.blocks.component.IMultiblockComponent.CapabilityRegistrar;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -35,25 +36,23 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.IEnergyStorage;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -126,8 +125,8 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         boolean counts = powder.getCount() != state.shownGunpowder.getCount()
                 || projectile.getCount() != state.shownProjectiles.getCount();
         boolean resync = active != state.active
-                || !ItemStack.isSameItemSameTags(powder, state.shownGunpowder)
-                || !ItemStack.isSameItemSameTags(projectile, state.shownProjectiles)
+                || !ItemStack.isSameItemSameComponents(powder, state.shownGunpowder)
+                || !ItemStack.isSameItemSameComponents(projectile, state.shownProjectiles)
                 || (counts && state.ticksSinceSync >= COUNT_SYNC_TICKS)
                 || (active && state.ticksSinceSync >= RESYNC_TICKS);
         state.active = active;
@@ -212,23 +211,23 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
 
     // Right-clicking either front screen opens the GUI
     @Override
-    public InteractionResult click(IMultiblockContext<State> ctx, BlockPos posInMultiblock, Player player,
+    public ItemInteractionResult click(IMultiblockContext<State> ctx, BlockPos posInMultiblock, Player player,
                                    InteractionHand hand, BlockHitResult absoluteHit, boolean isClient) {
-        if (!SCREEN_BLOCKS.contains(posInMultiblock)) return InteractionResult.PASS;
+        if (!SCREEN_BLOCKS.contains(posInMultiblock)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         if (!isClient) {
             BlockPos clicked = ctx.getLevel().toAbsolute(posInMultiblock);
             player.openMenu(new SimpleMenuProvider(
                     (id, inventory, p) -> AmmoAssemblerMenu.makeServer(id, inventory, new MultiblockMenuContext<>(ctx, clicked)),
                     Component.translatable("gui.immersive_munitions.ammo_assembler")));
         }
-        return InteractionResult.SUCCESS;
+        return ItemInteractionResult.SUCCESS;
     }
 
     // ---- Hoppers, capabilities and drops ----
 
     // One-slot hoppers; the GUI's client side builds the same ones so it filters items the same way
     static ItemStackHandler gunpowderSlot(Runnable markDirty) {
-        return slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDER));
+        return slot(markDirty, stack -> stack.is(Tags.Items.GUNPOWDERS));
     }
 
     static ItemStackHandler projectileSlot(Runnable markDirty) {
@@ -249,17 +248,13 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         };
     }
 
+    // Casings only from the input end's face; the hoppers and power from their face or from inside (null side)
     @Override
-    public <T> LazyOptional<T> getCapability(IMultiblockContext<State> ctx, CapabilityPosition position, Capability<T> cap) {
-        State state = ctx.getState();
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            if (CASING_INPUT.equals(position)) return state.casingCap.cast(ctx);
-            if (GUNPOWDER_INPUT.equalsOrNullFace(position)) return state.gunpowderCap.cast(ctx);
-            if (PROJECTILE_INPUT.equalsOrNullFace(position)) return state.projectileCap.cast(ctx);
-        } else if (cap == ForgeCapabilities.ENERGY && ENERGY_INPUT.equalsOrNullFace(position)) {
-            return state.energyCap.cast(ctx);
-        }
-        return LazyOptional.empty();
+    public void registerCapabilities(CapabilityRegistrar<State> register) {
+        register.registerAt(Capabilities.ItemHandler.BLOCK, CASING_INPUT, state -> state.casingInput);
+        register.registerAtOrNull(Capabilities.ItemHandler.BLOCK, GUNPOWDER_INPUT, state -> state.gunpowder);
+        register.registerAtOrNull(Capabilities.ItemHandler.BLOCK, PROJECTILE_INPUT, state -> state.projectiles);
+        register.registerAtOrNull(Capabilities.EnergyStorage.BLOCK, ENERGY_INPUT, state -> state.energy);
     }
 
     @Override
@@ -299,11 +294,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         // Client only: whether the running loop is still playing
         BooleanSupplier runningSound = () -> false;
 
-        private final StoredCapability<IItemHandler> casingCap;
-        private final StoredCapability<IItemHandler> gunpowderCap;
-        private final StoredCapability<IItemHandler> projectileCap;
-        private final StoredCapability<IEnergyStorage> energyCap = new StoredCapability<>(energy);
-
         State(IInitialMultiblockContext<State> ctx) {
             Runnable markDirty = ctx.getMarkDirtyRunnable();
             processor = new MultiblockProcessor<>(MAX_CASINGS, maxTicks -> MIN_SPACING, MAX_CASINGS, markDirty, ctx.getSyncRunnable(),
@@ -312,10 +302,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
             projectiles = projectileSlot(markDirty);
             casingInput = new CasingInput(ctx.levelSupplier(), this);
             output = new DroppingMultiblockOutput(OUTPUT, ctx);
-
-            casingCap = new StoredCapability<>(casingInput);
-            gunpowderCap = new StoredCapability<>(gunpowder);
-            projectileCap = new StoredCapability<>(projectiles);
         }
 
         // ---- Belt rules ----
@@ -376,11 +362,12 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
                 }
             if (cleared.isEmpty()) return false;
             // the queue is read-only, so rebuild it from its saved form without the cleared casings
+            Provider provider = level.registryAccess();
             ListTag kept = new ListTag();
-            if (processor.toNBT() instanceof ListTag all)
+            if (processor.toNBT(provider) instanceof ListTag all)
                 for (Tag tag : all)
                     if (tag instanceof CompoundTag process && !cleared.contains(process.getLong("id"))) kept.add(process);
-            processor.fromNBT(kept, AssemblyProcess::new);
+            processor.fromNBT(kept, AssemblyProcess::new, provider);
             return true;
         }
 
@@ -415,42 +402,42 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         // ---- Saving and syncing ----
 
         @Override
-        public void writeSaveNBT(CompoundTag nbt) {
-            nbt.put("energy", energy.serializeNBT());
-            nbt.put("gunpowder", gunpowder.serializeNBT());
-            nbt.put("projectiles", projectiles.serializeNBT());
-            nbt.put("processor", processor.toNBT());
+        public void writeSaveNBT(CompoundTag nbt, Provider provider) {
+            nbt.put("energy", energy.serializeNBT(provider));
+            nbt.put("gunpowder", gunpowder.serializeNBT(provider));
+            nbt.put("projectiles", projectiles.serializeNBT(provider));
+            nbt.put("processor", processor.toNBT(provider));
         }
 
         @Override
-        public void readSaveNBT(CompoundTag nbt) {
-            energy.deserializeNBT(nbt.get("energy"));
-            gunpowder.deserializeNBT(nbt.getCompound("gunpowder"));
-            projectiles.deserializeNBT(nbt.getCompound("projectiles"));
-            processor.fromNBT(nbt.get("processor"), AssemblyProcess::new);
+        public void readSaveNBT(CompoundTag nbt, Provider provider) {
+            energy.deserializeNBT(provider, nbt.get("energy"));
+            gunpowder.deserializeNBT(provider, nbt.getCompound("gunpowder"));
+            projectiles.deserializeNBT(provider, nbt.getCompound("projectiles"));
+            processor.fromNBT(nbt.get("processor"), AssemblyProcess::new, provider);
         }
 
         @Override
-        public void writeSyncNBT(CompoundTag nbt) {
-            nbt.put("processor", processor.toNBT());
+        public void writeSyncNBT(CompoundTag nbt, Provider provider) {
+            nbt.put("processor", processor.toNBT(provider));
             nbt.putBoolean("active", active);
-            if (!shownGunpowder.isEmpty()) nbt.put("gunpowder", shownGunpowder.save(new CompoundTag()));
-            if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(new CompoundTag()));
+            if (!shownGunpowder.isEmpty()) nbt.put("gunpowder", shownGunpowder.save(provider));
+            if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(provider));
         }
 
         // Casings the client is already running keep their place unless they've drifted (see keepClientProgress)
         @Override
-        public void readSyncNBT(CompoundTag nbt) {
+        public void readSyncNBT(CompoundTag nbt, Provider provider) {
             Map<Long, AssemblyProcess> running = new HashMap<>();
             for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
                 if (process instanceof AssemblyProcess casing) running.put(casing.id(), casing);
-            processor.fromNBT(nbt.get("processor"), AssemblyProcess::new);
+            processor.fromNBT(nbt.get("processor"), AssemblyProcess::new, provider);
             for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : processor.getQueue())
                 if (process instanceof AssemblyProcess casing && running.containsKey(casing.id()))
                     casing.keepClientProgress(running.get(casing.id()));
             active = nbt.getBoolean("active");
-            shownGunpowder = nbt.contains("gunpowder") ? ItemStack.of(nbt.getCompound("gunpowder")) : ItemStack.EMPTY;
-            shownProjectiles = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
+            shownGunpowder = ItemStack.parseOptional(provider, nbt.getCompound("gunpowder"));
+            shownProjectiles = ItemStack.parseOptional(provider, nbt.getCompound("projectile"));
         }
     }
 
@@ -470,7 +457,7 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             Level world = level.get();
             if (world == null || stack.isEmpty()) return stack;
-            AmmoAssemblyRecipe recipe = AmmoAssemblyRecipe.findForCasing(world, stack);
+            RecipeHolder<AmmoAssemblyRecipe> recipe = AmmoAssemblyRecipe.findForCasing(world, stack);
             if (recipe == null) return stack;
 
             ItemStack one = stack.copyWithCount(1);

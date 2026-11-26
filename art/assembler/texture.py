@@ -376,7 +376,7 @@ if EXPORT:
         name = "ammo_assembler_" + group
         export_obj(name, lambda n, parts=parts: n in parts)
         with open(os.path.join(model_dir, name + ".json"), "w") as f:
-            json.dump({"loader": "forge:obj", "model": f"immersive_munitions:models/block/{name}.obj",
+            json.dump({"loader": "neoforge:obj", "model": f"immersive_munitions:models/block/{name}.obj",
                        "flip_v": True, "automatic_culling": False,
                        "textures": {"particle": "immersiveengineering:block/metal/sheetmetal_steel"}}, f, indent=2)
             f.write("\n")
@@ -390,7 +390,7 @@ if EXPORT:
         "split_parts": [list(c) for c in sorted(cells)],
         "inner_model": {
             "parent": "minecraft:block/block",
-            "loader": "forge:obj",
+            "loader": "neoforge:obj",
             "model": "immersive_munitions:models/block/ammo_assembler.obj",
             "flip_v": True,
             "automatic_culling": False,

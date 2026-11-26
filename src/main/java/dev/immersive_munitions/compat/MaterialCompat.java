@@ -6,8 +6,8 @@ import dev.immersive_munitions.registry.ModBlocks;
 import dev.immersive_munitions.registry.ModItems;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -62,13 +62,13 @@ public final class MaterialCompat {
     }
 
     @SafeVarargs
-    private static void items(Set<Item> set, RegistryObject<Item>... items) {
-        for (RegistryObject<Item> item : items) set.add(item.get());
+    private static void items(Set<Item> set, DeferredHolder<Item, Item>... items) {
+        for (DeferredHolder<Item, Item> item : items) set.add(item.get());
     }
 
     @SafeVarargs
-    private static void blocks(Set<Item> set, RegistryObject<? extends Block>... blocks) {
-        for (RegistryObject<? extends Block> block : blocks) set.add(block.get().asItem());
+    private static void blocks(Set<Item> set, DeferredHolder<Block, ? extends Block>... blocks) {
+        for (DeferredHolder<Block, ? extends Block> block : blocks) set.add(block.get().asItem());
     }
 
     /**

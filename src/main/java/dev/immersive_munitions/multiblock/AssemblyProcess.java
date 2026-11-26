@@ -6,10 +6,12 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.process.Multibl
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
 import dev.immersive_munitions.multiblock.AmmoAssemblerLogic.State;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -33,13 +35,13 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     private boolean placed;
     private transient boolean moving;
 
-    public AssemblyProcess(AmmoAssemblyRecipe recipe, NonNullList<ItemStack> casing) {
+    public AssemblyProcess(RecipeHolder<AmmoAssemblyRecipe> recipe, NonNullList<ItemStack> casing) {
         super(recipe, AmmoAssemblerLogic.PRESS_POINT, casing);
         id = ThreadLocalRandom.current().nextLong();
     }
 
-    public AssemblyProcess(BiFunction<Level, ResourceLocation, AmmoAssemblyRecipe> getRecipe, CompoundTag nbt) {
-        super(getRecipe, nbt);
+    public AssemblyProcess(BiFunction<Level, ResourceLocation, AmmoAssemblyRecipe> getRecipe, CompoundTag nbt, Provider provider) {
+        super(getRecipe, nbt, provider);
         id = nbt.contains("id") ? nbt.getLong("id") : ThreadLocalRandom.current().nextLong();
         filled = nbt.getBoolean("filled");
         placed = nbt.getBoolean("placed");
@@ -183,8 +185,8 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     // ---- Saving ----
 
     @Override
-    public void writeExtraDataToNBT(CompoundTag nbt) {
-        super.writeExtraDataToNBT(nbt);
+    public void writeExtraDataToNBT(CompoundTag nbt, Provider provider) {
+        super.writeExtraDataToNBT(nbt, provider);
         nbt.putLong("id", id);
         nbt.putBoolean("filled", filled);
         nbt.putBoolean("placed", placed);

@@ -1,0 +1,8 @@
+{
+  "type": "immersiveengineering:blueprint",
+  "category": "shotgun_projectiles",
+  "inputs": [
+    {"tag": "c:wires/lead"}
+  ],
+  "result": {"id": "immersive_munitions:projectile_12g", "count": 1}
+}

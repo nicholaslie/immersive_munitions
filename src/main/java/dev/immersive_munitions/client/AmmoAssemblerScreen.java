@@ -9,17 +9,17 @@ import dev.immersive_munitions.multiblock.AmmoAssemblerMenu;
 import dev.immersive_munitions.registry.ModMenus;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -87,11 +87,11 @@ public class AmmoAssemblerScreen extends IEContainerScreen<AmmoAssemblerMenu> {
         else if (slot.index == AmmoAssemblerMenu.PROJECTILE_SLOT) addLine.accept(Component.translatable(LANG + ".projectiles"));
     }
 
-    @Mod.EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
     public static final class Registration {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {
-            event.enqueueWork(() -> MenuScreens.register(ModMenus.AMMO_ASSEMBLER.get(), AmmoAssemblerScreen::new));
+        public static void onRegisterScreens(RegisterMenuScreensEvent event) {
+            event.register(ModMenus.AMMO_ASSEMBLER.get(), AmmoAssemblerScreen::new);
         }
 
         private Registration() {}

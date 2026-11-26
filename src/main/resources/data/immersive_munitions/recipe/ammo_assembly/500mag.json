@@ -1,0 +1,8 @@
+{
+  "type": "immersive_munitions:ammo_assembly",
+  "casing": {"item": "immersive_munitions:empty_casing_500mag"},
+  "projectile": {"item": "immersive_munitions:projectile_500mag"},
+  "gunpowder": {"tag": "c:gunpowders"},
+  "ammo": "500mag",
+  "count": 1
+}

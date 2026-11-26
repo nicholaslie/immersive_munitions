@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {"tag": "c:plates/brass"},
+    "d": {"tag": "c:dyes/blue"},
+    "p": {"tag": "c:paper"}
+  },
+  "pattern": ["B B", "ddd", "ppp"],
+  "result": {"id": "immersiveengineering:blueprint", "components": {"immersiveengineering:blueprint": "rifle_casing_molds"}},
+  "show_notification": true
+}

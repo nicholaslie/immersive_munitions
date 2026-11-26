@@ -1,0 +1,7 @@
+{
+  "type": "immersiveengineering:metal_press",
+  "input": {"tag": "c:ingots/aluminum"},
+  "mold": "immersive_munitions:mold_casing_40mm",
+  "result": {"id": "immersive_munitions:empty_casing_40mm", "count": 1},
+  "energy": 2400
+}

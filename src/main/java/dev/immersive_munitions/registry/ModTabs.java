@@ -8,8 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,9 +30,9 @@ public final class ModTabs {
         PROJECTILES("projectiles", CreativeIconItems.PROJECTILE);
 
         public final String id;
-        public final RegistryObject<Item> icon;
+        public final DeferredHolder<Item, Item> icon;
 
-        Section(String id, RegistryObject<Item> icon) {
+        Section(String id, DeferredHolder<Item, Item> icon) {
             this.id = id;
             this.icon = icon;
         }
@@ -40,7 +40,7 @@ public final class ModTabs {
 
     public static Section selectedSection = Section.SHELLS;
 
-    public static final RegistryObject<CreativeModeTab> MAIN = TABS.register("main", () ->
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN = TABS.register("main", () ->
             new CreativeModeTab.Builder(CreativeModeTab.Row.TOP, 0)
                     .title(Component.translatable("itemGroup." + ImmersiveMunitions.MODID))
                     .icon(() -> new ItemStack(CreativeIconItems.EMPTY_CASING.get()))
@@ -64,7 +64,7 @@ public final class ModTabs {
         switch (section) {
             // ModItems also holds the block items, so this covers the ore and storage blocks. Leaves out what Create or
             // Immersive Geology already provide (MaterialCompat)
-            case MATERIALS -> ModItems.ITEMS.getEntries().stream().map(RegistryObject::get)
+            case MATERIALS -> ModItems.ITEMS.getEntries().stream().map(DeferredHolder::get)
                     .filter(item -> !MaterialCompat.isHidden(item)).forEach(item -> out.add(new ItemStack(item)));
             case MOLDS -> addParts(AmmoComponentItems.CASING_MOLDS, out);
             case SHELLS -> addParts(AmmoComponentItems.EMPTY_CASINGS, out);
@@ -73,7 +73,7 @@ public final class ModTabs {
     }
 
     // a gun pack's parts only show when that pack is installed (ArmorerCompat)
-    private static void addParts(Map<String, RegistryObject<Item>> parts, Collection<ItemStack> out) {
+    private static void addParts(Map<String, DeferredHolder<Item, Item>> parts, Collection<ItemStack> out) {
         boolean armorer = ArmorerCompat.packLoaded(true);
         parts.forEach((caliber, item) -> {
             if (armorer || !AmmoComponentItems.ARMORER_CALIBERS.contains(caliber)) out.add(new ItemStack(item.get()));
