@@ -2,16 +2,28 @@
 
 ## Unreleased
 
-Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.3.0-beta), only Fixed raises the last (0.2.1-beta).
+Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.4.0-beta), only Fixed raises the last (0.3.1-beta).
 
 ### Added
 
 ### Changed
 
+### Fixed
+
+## 0.3.0-beta (2026-11-25)
+
+Ammunition now comes only from the Ammunition Assembler: TaCZ's ammo recipes and Immersive Engineering's guns are switched off (both configurable), the Gunsmith villager sells this mod's blueprints, and there's a new logo.
+
+### Added
+
+- **The Gunsmith villager sells our blueprints:** a casing mold or projectile blueprint for one gun type per level (pistol and shotgun at Apprentice, rifle at Journeyman, heavy at Expert, grenade at Master), and buys brass ingots and gunpowder (Novice) and lead ingots (Journeyman). With IE's guns removed, its bullet, blueprint and revolver part trades are gone; the wooden grip stays.
+
+### Changed
+
+- **Ammunition now comes from the Ammunition Assembler:** the gun smith table's ammo recipes are removed (TaCZ's default gun pack and any other gun pack). Config: `remove_tacz_ammo_recipes`.
+- **Immersive Engineering's guns are removed:** the revolver, railgun, chemthrower and both turrets can no longer be crafted, along with IE's bullets, empty casings and shells, the revolver parts, both bullet blueprints (regular and special) and the casing mold, and the upgrades only these guns use (revolver bayonet, magazine and electro, railgun scope and capacitors, chemthrower focus and multitank). They're hidden from JEI and IE's creative tab, and no longer turn up in chest loot or the Gunsmith villager's trades; any already in a world keep working. Shared parts stay (wooden grip, iron and steel rods, graphite electrodes). Config: `remove_ie_weapons`.
 - **New mod logo:** a 5.56 round in the badge frame the Immersive addons share, as pixel art. The frame is Immersive Farming's (MIT licensed, credited in NOTICE.md). An unused copy of the old logo is gone from the jar.
 - The mod jar now includes LICENSE and NOTICE.md.
-
-### Fixed
 
 ## 0.2.0-beta (2026-11-25)
 

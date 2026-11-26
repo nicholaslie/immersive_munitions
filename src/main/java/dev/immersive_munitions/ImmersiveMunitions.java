@@ -1,6 +1,7 @@
 package dev.immersive_munitions;
 
 import dev.immersive_munitions.compat.MaterialCompat;
+import dev.immersive_munitions.compat.RemovedWeaponLoot;
 import dev.immersive_munitions.registry.AmmoComponentItems;
 import dev.immersive_munitions.registry.CreativeIconItems;
 import dev.immersive_munitions.registry.ModBlocks;
@@ -40,6 +41,7 @@ public class ImmersiveMunitions {
         ModMenus.MENUS.register(bus);
         ModTabs.TABS.register(bus);
         ModBiomeModifiers.SERIALIZERS.register(bus);
+        RemovedWeaponLoot.LOOT_MODIFIERS.register(bus);
 
         bus.addListener(this::commonSetup);
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
