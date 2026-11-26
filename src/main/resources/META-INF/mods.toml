@@ -8,7 +8,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 logoFile="icon.png"
 authors="${mod_authors}"
-credits="Zinc and brass textures recolored from Immersive Engineering's art. Creative side tabs adapted from TaCZ (GPLv3). Built on Immersive Engineering by BluSunrize. See NOTICE.md."
+credits="Zinc and brass textures recolored from Immersive Engineering's art. Creative side tabs adapted from TaCZ (GPLv3). Logo frame from Immersive Farming (MIT). Built on Immersive Engineering by BluSunrize. See NOTICE.md."
 description='''${mod_description}'''
 
 [[dependencies.${mod_id}]]

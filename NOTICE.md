@@ -2,7 +2,7 @@
 
 Immersive Munitions is licensed under the **GNU General Public License v3.0 or later** (see [LICENSE](LICENSE)), except for the third-party material below, which stays under its original license.
 
-This is an unofficial addon, not made or endorsed by the authors of Immersive Engineering, Timeless and Classics Zero (TaCZ) or Immersive Geology.
+This is an unofficial addon, not made or endorsed by the authors of Immersive Engineering, Timeless and Classics Zero (TaCZ), Immersive Farming or Immersive Geology.
 
 ## Timeless and Classics Zero (TaCZ), by Serene Wave Studio / Timeless Squad
 
@@ -26,6 +26,20 @@ Licensed under [Blu's License of Common Sense](https://github.com/BluSunrize/Imm
 - The mod uses IE's API and machines. No IE code is included.
 
 Source: https://github.com/BluSunrize/ImmersiveEngineering
+
+## Immersive Farming, by Etyl
+
+The mod logo (`icon.png`, made by `art/logo/Badge.java`) uses Immersive Farming's badge frame: its wood border, orange trim and panel, taken from its icon with the hoe removed (`art/logo/frame_immersive_farming.png`). The 5.56 round inside is this mod's own sprite. Immersive Farming is released under the MIT License:
+
+> Copyright (c) Etyl and the Immersive Farming contributors
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Source: https://github.com/Etyl/ImmersiveFarming
 
 ## Immersive Geology and Create
 

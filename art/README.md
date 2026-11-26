@@ -12,7 +12,8 @@ It adds the caliber label to each sprite and mold and writes them into the mod a
 
 | Folder | Contents |
 |---|---|
-| `logo.png` | Full-resolution mod logo (the in-game 64x64 copy is `src/main/resources/icon.png`) |
+| `logo.png` | Mod logo at 512x512, for CurseForge. Written by `logo/Badge.java` (`java art/logo/Badge.java`), along with the in-game 64x64 `src/main/resources/icon.png` |
+| `logo/` | `Badge.java` and `frame_immersive_farming.png`, Immersive Farming's badge frame (MIT, see NOTICE.md) |
 | `sprites/casings/` | `casing_<id>.png`: empty casing standing upright |
 | `sprites/casings_sideways/` | `casing_<id>_side.png`: empty casing at a 3/4 angle (spent brass / ejection) |
 | `sprites/rounds/` | `round_<id>.png`: loaded cartridge |

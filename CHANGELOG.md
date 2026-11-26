@@ -8,6 +8,9 @@ Changes since the last release. The next version number follows from them: anyth
 
 ### Changed
 
+- **New mod logo:** a 5.56 round in the badge frame the Immersive addons share, as pixel art. The frame is Immersive Farming's (MIT licensed, credited in NOTICE.md). An unused copy of the old logo is gone from the jar.
+- The mod jar now includes LICENSE and NOTICE.md.
+
 ### Fixed
 
 ## 0.2.0-beta (2026-11-25)
