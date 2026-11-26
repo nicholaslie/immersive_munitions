@@ -1,6 +1,6 @@
 {
   "loader": "forge:obj",
-  "model": "immersive_munitions:models/block/ammo_assembler_jaws.obj",
+  "model": "immersive_munitions:models/block/ammo_assembler_sight.obj",
   "flip_v": true,
   "automatic_culling": false,
   "textures": {

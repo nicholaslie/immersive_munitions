@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-beta (2026-11-25)
+
+The first beta. The Ammunition Assembler has been rebuilt to look and work like a real progressive ammunition press, and it now has sounds. Version numbers now follow [Semantic Versioning](https://semver.org): new features raise the middle number, fixes raise the last, and 1.0.0 will be the full release.
+
+- **New look.** The Ammunition Assembler now matches IE's Automated Engineer's Workbench: the same base with its wood band and redstone panel, a ribbed silver housing and roof, flush roof ports, and grey conveyor trim. Its ends are open, under a short ribbed header. The red status lamp is gone.
+- **New stations, modelled on real reloading tooling:**
+  - **Powder:** the handwheel and a glass sight tube that shows the gunpowder while there is some, then a tapered steel nozzle with a brass tip. The powder falls straight into each casing as it passes, timed to the belt, with a puff of smoke.
+  - **Projectiles:** a glass feed tube from the roof shows the hopper's projectiles stacked inside. It feeds a bullet feed die whose four spring fingers grip each projectile by its sides, opening wider for big rounds like the 12 Gauge slug and 40mm. After each placement the fingers are empty for a moment, then the next projectile drops in from the die, and the stack in the tube drops one place. The reload speeds up to keep pace when casings are close together.
+  - **Press:** a round seating die under the press crosshead. It stops exactly on top of each round, so short and tall rounds are both met cleanly.
+- **New structure.** The Ammunition Assembler has a new block layout (see the Engineer's Manual or JEI), and it's now formed by hitting the **Redstone Engineering Block** with the Engineer's Hammer, instead of the middle conveyor. Existing machines keep working, but break into the new layout's blocks.
+- **Sounds:** a quiet running hum, plus sounds for the powder pour, the projectile drop and the press, each timed to its station and with subtitles. They're the mod's own sound events, so resource packs can replace them.
+
+
 ## 0.0.9-alpha (2026-11-25)
 
 Projectiles are now assembled like real bullets, and the 40mm grenade is closer to the real thing. JEI shows everything.

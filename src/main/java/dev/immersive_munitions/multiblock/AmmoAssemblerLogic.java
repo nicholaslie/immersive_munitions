@@ -20,8 +20,10 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.process.Multibl
 import blusunrize.immersiveengineering.common.blocks.multiblocks.process.ProcessContext.ProcessContextInWorld;
 import blusunrize.immersiveengineering.common.gui.IEContainerMenu.MultiblockMenuContext;
 import blusunrize.immersiveengineering.common.util.DroppingMultiblockOutput;
+import blusunrize.immersiveengineering.common.util.sound.MultiblockSound;
 import dev.immersive_munitions.crafting.AmmoAssemblyRecipe;
 import dev.immersive_munitions.registry.ModParticles;
+import dev.immersive_munitions.registry.ModSounds;
 import dev.immersive_munitions.registry.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -29,6 +31,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -56,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -92,9 +97,16 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     private static final int RESYNC_TICKS = 20, COUNT_SYNC_TICKS = 5;
 
     // Powder effect: the drop tube's tip (blueprint space) and the stream poured from it
-    private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.37, 1.5);
-    private static final int STREAM_GRAINS = 30, SMOKE_WISPS = 6;
-    private static final double STREAM_LENGTH = 0.12, BELT_BLOCKS = 3;
+    private static final Vec3 DROP_TUBE_TIP = new Vec3(0.5, 1.40, 1.5);
+    // The pour lasts POUR_TICKS, each tick dropping GRAINS_PER_TICK grains and SMOKE_PER_TICK wisps, then CASING_SMOKE
+    // wisps rise out of the casing. Grains fall straight down (they don't follow the belt) and take a few ticks to reach
+    // the casing, so the pour starts POUR_LEAD ticks early and lands as the casing passes under the nozzle
+    private static final int POUR_TICKS = 3, GRAINS_PER_TICK = 8, SMOKE_PER_TICK = 1, CASING_SMOKE = 4;
+    private static final int POUR_LEAD = 5;   // ticks before the casing reaches the station; set by eye in game
+    private static final double STREAM_LENGTH = 0.12;
+    // Sounds: where they come from (blueprint space), and the running loop's volume
+    private static final Vec3 CENTRE = new Vec3(1.5, 1.5, 1.5), FEEDER = new Vec3(1.5, 1.5, 1.5), PRESS = new Vec3(2.5, 1.5, 1.5);
+    private static final float RUNNING_VOLUME = 0.3f;
 
     @Override
     public State createInitialState(IInitialMultiblockContext<State> ctx) {
@@ -109,18 +121,16 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     public void tickServer(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
         boolean active = state.processor.tickServer(state, ctx.getLevel(), state.rsState.isEnabled(ctx));
-        boolean powered = state.energy.getEnergyStored() > 0;
         ItemStack powder = state.gunpowder.getStackInSlot(0), projectile = state.projectiles.getStackInSlot(0);
         state.ticksSinceSync++;
         boolean counts = powder.getCount() != state.shownGunpowder.getCount()
                 || projectile.getCount() != state.shownProjectiles.getCount();
-        boolean resync = active != state.active || powered != state.powered
+        boolean resync = active != state.active
                 || !ItemStack.isSameItemSameTags(powder, state.shownGunpowder)
                 || !ItemStack.isSameItemSameTags(projectile, state.shownProjectiles)
                 || (counts && state.ticksSinceSync >= COUNT_SYNC_TICKS)
                 || (active && state.ticksSinceSync >= RESYNC_TICKS);
         state.active = active;
-        state.powered = powered;
         if (resync) {
             state.shownGunpowder = powder.copy();
             state.shownProjectiles = projectile.copy();
@@ -132,32 +142,51 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
     @Override
     public void tickClient(IMultiblockContext<State> ctx) {
         State state = ctx.getState();
-        Level level = ctx.getLevel().getRawLevel();
+        IMultiblockLevel mbLevel = ctx.getLevel();
+        Level level = mbLevel.getRawLevel();
+        if (!state.runningSound.getAsBoolean())
+            state.runningSound = MultiblockSound.startSound(
+                    () -> state.active, ctx.isValid(), mbLevel.toAbsolute(CENTRE), ModSounds.ASSEMBLER_RUNNING, RUNNING_VOLUME);
         for (MultiblockProcess<AmmoAssemblyRecipe, ?> process : state.processor.getQueue())
             if (process instanceof AssemblyProcess casing) {
-                boolean wasFilled = casing.isFilled();
-                casing.tickClient(state, level, state.active && state.additionalCanProcessCheck(process, level));
-                if (!wasFilled && casing.isFilled()) pourPowder(ctx.getLevel(), level, casing.getMaxTicks(level));
+                boolean canMove = state.active && state.additionalCanProcessCheck(process, level);
+                if (canMove && state.hasGunpowder() && casing.startsPour(level, POUR_LEAD)) {
+                    state.pourTube = mbLevel.toAbsolute(DROP_TUBE_TIP);
+                    state.pourTicks = POUR_TICKS;
+                    play(level, state.pourTube, ModSounds.ASSEMBLER_POUR.get(), 0.18f, 1.6f);
+                }
+                boolean wasPlaced = casing.isPlaced(), wasBeforePress = casing.beforePress(level);
+                casing.tickClient(state, level, canMove);
+                if (!wasPlaced && casing.isPlaced())
+                    play(level, mbLevel.toAbsolute(FEEDER), ModSounds.ASSEMBLER_PLACE.get(), 0.2f, 1.7f);
+                if (wasBeforePress && !casing.beforePress(level))
+                    play(level, mbLevel.toAbsolute(PRESS), ModSounds.ASSEMBLER_PRESS.get(), 0.15f, 1.3f);
             }
+        if (state.pourTicks > 0) {
+            state.pourTicks--;
+            pourPowder(state, level);
+        }
     }
 
-    // A quick stream of powder grains from the drop tube into the casing, plus a small puff of smoke, all moving
-    // along with the belt
-    private static void pourPowder(IMultiblockLevel mbLevel, Level level, int maxTicks) {
-        if (maxTicks <= 0) return;
-        Vec3 tube = mbLevel.toAbsolute(DROP_TUBE_TIP);
-        Vec3 belt = mbLevel.toAbsolute(DROP_TUBE_TIP.add(BELT_BLOCKS / maxTicks, 0, 0)).subtract(tube);
+    // A one-off machine sound, heard only on this client (each client plays its own as its belt runs)
+    private static void play(Level level, Vec3 pos, SoundEvent sound, float volume, float pitch) {
+        level.playLocalSound(pos.x, pos.y, pos.z, sound, SoundSource.BLOCKS, volume, pitch, false);
+    }
+
+    // One tick of the pour: grains and smoke from the nozzle, falling straight down
+    private static void pourPowder(State state, Level level) {
+        Vec3 tube = state.pourTube;
         RandomSource random = level.random;
-        for (int i = 0; i < STREAM_GRAINS; i++) {
-            double drop = (i + random.nextDouble()) / STREAM_GRAINS * STREAM_LENGTH;
+        for (int i = 0; i < GRAINS_PER_TICK; i++) {
             double jx = (random.nextDouble() - 0.5) * 0.018, jz = (random.nextDouble() - 0.5) * 0.008;
-            level.addParticle(ModParticles.GUNPOWDER.get(), tube.x + jx, tube.y - drop, tube.z + jz,
-                    belt.x, -0.05 - random.nextDouble() * 0.02, belt.z);
+            level.addParticle(ModParticles.GUNPOWDER.get(), tube.x + jx, tube.y - random.nextDouble() * 0.02, tube.z + jz,
+                    0, -0.018 - random.nextDouble() * 0.01, 0);   // a little slower: lands a fraction of a tick later
         }
-        // half the smoke puffs down from the tube, half up out of the casing
-        for (int i = 0; i < SMOKE_WISPS; i++) {
-            boolean fromCasing = i % 2 == 1;
-            double vx = belt.x + (random.nextDouble() - 0.5) * 0.03, vz = belt.z + (random.nextDouble() - 0.5) * 0.03;
+        // smoke puffs down from the nozzle while it pours, then up out of the casing as the last grains land
+        boolean last = state.pourTicks == 0;
+        for (int i = 0; i < (last ? CASING_SMOKE : SMOKE_PER_TICK); i++) {
+            boolean fromCasing = last;
+            double vx = (random.nextDouble() - 0.5) * 0.03, vz = (random.nextDouble() - 0.5) * 0.03;
             double vy = fromCasing ? 0.008 + random.nextDouble() * 0.01 : -0.02 - random.nextDouble() * 0.015;
             level.addParticle(ModParticles.POWDER_SMOKE.get(), tube.x, tube.y - (fromCasing ? STREAM_LENGTH : 0), tube.z,
                     vx, vy, vz);
@@ -257,14 +286,18 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         private final AveragingEnergyStorage energy = new AveragingEnergyStorage(ENERGY_CAPACITY);
         private final DroppingMultiblockOutput output;
 
-        // Synced to the client: working (runs its belt), powered (the front lamp), and the hoppers' contents (the
+        // Synced to the client: working (runs its belt) and the hoppers' contents (the
         // feeder's projectile and the front screens)
         private boolean active;
-        private boolean powered;
         ItemStack shownGunpowder = ItemStack.EMPTY, shownProjectiles = ItemStack.EMPTY;
         private int ticksSinceSync;
+        // the client's powder pour in progress: ticks left and where it pours from
+        int pourTicks;
+        Vec3 pourTube = Vec3.ZERO;
         // Client only: casings filled so far, which turns the powder handwheel
         int clientFills;
+        // Client only: whether the running loop is still playing
+        BooleanSupplier runningSound = () -> false;
 
         private final StoredCapability<IItemHandler> casingCap;
         private final StoredCapability<IItemHandler> gunpowderCap;
@@ -353,10 +386,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
 
         // ---- Client view ----
 
-        public boolean isPowered() {
-            return powered;
-        }
-
         public boolean isActive() {
             return active;
         }
@@ -405,7 +434,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
         public void writeSyncNBT(CompoundTag nbt) {
             nbt.put("processor", processor.toNBT());
             nbt.putBoolean("active", active);
-            nbt.putBoolean("powered", powered);
             if (!shownGunpowder.isEmpty()) nbt.put("gunpowder", shownGunpowder.save(new CompoundTag()));
             if (!shownProjectiles.isEmpty()) nbt.put("projectile", shownProjectiles.save(new CompoundTag()));
         }
@@ -421,7 +449,6 @@ public class AmmoAssemblerLogic implements IMultiblockLogic<AmmoAssemblerLogic.S
                 if (process instanceof AssemblyProcess casing && running.containsKey(casing.id()))
                     casing.keepClientProgress(running.get(casing.id()));
             active = nbt.getBoolean("active");
-            powered = nbt.getBoolean("powered");
             shownGunpowder = nbt.contains("gunpowder") ? ItemStack.of(nbt.getCompound("gunpowder")) : ItemStack.EMPTY;
             shownProjectiles = nbt.contains("projectile") ? ItemStack.of(nbt.getCompound("projectile")) : ItemStack.EMPTY;
         }

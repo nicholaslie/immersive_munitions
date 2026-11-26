@@ -116,5 +116,9 @@
   "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_1": "Returns unfinished casings, with",
   "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_2": "their gunpowder and projectiles,",
   "gui.immersive_munitions.ammo_assembler.clear_belt.tooltip_3": "to your inventory",
-  "jei.immersive_munitions.ammo_assembly.cost": "%s IF per round, %ss"
+  "jei.immersive_munitions.ammo_assembly.cost": "%s IF per round, %ss",
+  "subtitle.immersive_munitions.assembler.running": "Ammunition Assembler whirs",
+  "subtitle.immersive_munitions.assembler.pour": "Gunpowder pours",
+  "subtitle.immersive_munitions.assembler.place": "Projectile drops",
+  "subtitle.immersive_munitions.assembler.press": "Press seats round"
 }

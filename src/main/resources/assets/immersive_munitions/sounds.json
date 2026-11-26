@@ -1,0 +1,18 @@
+{
+  "assembler.running": {
+    "subtitle": "subtitle.immersive_munitions.assembler.running",
+    "sounds": [{"name": "immersiveengineering:assembler", "type": "event"}]
+  },
+  "assembler.pour": {
+    "subtitle": "subtitle.immersive_munitions.assembler.pour",
+    "sounds": [{"name": "minecraft:block.sand.step", "type": "event"}]
+  },
+  "assembler.place": {
+    "subtitle": "subtitle.immersive_munitions.assembler.place",
+    "sounds": [{"name": "minecraft:block.chain.place", "type": "event"}]
+  },
+  "assembler.press": {
+    "subtitle": "subtitle.immersive_munitions.assembler.press",
+    "sounds": [{"name": "immersiveengineering:metal_press_smash", "type": "event"}]
+  }
+}

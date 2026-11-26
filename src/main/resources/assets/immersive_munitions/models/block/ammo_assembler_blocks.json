@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "immersive_munitions:models/block/ammo_assembler_blocks.obj",
+  "flip_v": true,
+  "automatic_culling": false,
+  "textures": {
+    "particle": "immersiveengineering:block/metal/sheetmetal_steel"
+  }
+}

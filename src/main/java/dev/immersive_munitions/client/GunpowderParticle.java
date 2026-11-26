@@ -22,10 +22,10 @@ public class GunpowderParticle extends TextureSheetParticle {
         yd = vy;
         zd = vz;
         friction = 1;
-        gravity = 0.5f;
+        gravity = 0.3f;
         hasPhysics = false;
-        lifetime = 3 + random.nextInt(2);
-        quadSize = 0.032f + random.nextFloat() * 0.01f;
+        lifetime = 3;   // about the fall from the nozzle to the casing mouth
+        quadSize = 0.04f + random.nextFloat() * 0.015f;
         float shade = 0.28f + random.nextFloat() * 0.17f;
         setColor(shade, shade, shade);
     }

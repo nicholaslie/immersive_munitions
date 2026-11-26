@@ -29,6 +29,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
     // id tells casings apart across syncs; moving (client only) lets the renderer interpolate
     private final long id;
     private boolean filled;
+    private boolean poured;   // client only: the powder pour for this casing has started
     private boolean placed;
     private transient boolean moving;
 
@@ -90,6 +91,16 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
             }
         }
         super.doProcessTick(context, level);
+    }
+
+    /**
+     * Client: true once, leadTicks before the casing reaches the powder station, so grains falling straight from the
+     * nozzle land in it as it passes underneath.
+     */
+    boolean startsPour(Level level, int leadTicks) {
+        if (poured || filled || processTick + 1 + leadTicks < AmmoAssemblerLogic.FILL_POINT * getMaxTicks(level)) return false;
+        poured = true;
+        return true;
     }
 
     // True on the tick the casing would move onto a station that hasn't served it yet
@@ -164,6 +175,7 @@ public class AssemblyProcess extends MultiblockProcessInWorld<AmmoAssemblyRecipe
         if (Math.abs(client.processTick - processTick) > MAX_CLIENT_DRIFT) return;
         processTick = client.processTick;
         filled = client.filled;
+        poured = client.poured;
         placed = client.placed;
         moving = client.moving;
     }

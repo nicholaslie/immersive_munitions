@@ -14,6 +14,7 @@ Texture modes:
   belt    IE conveyor, running along the belt
   whole   texture (or one sheet tile) stretched over the part; whole_r turns it 90 degrees
   rect    one tile of an IE sheet stretched over the part (ports)
+  strip   a strip of an IE sheet laid along the part at its true size (the base)
   panel9  our long sheet-metal panels: one panel per wall, seams and corner rivets only at its edges
   rail    our conveyor rail strip: one rivet at each end
 """
@@ -36,14 +37,28 @@ def sheet(col, row):
     return ("sheet", (col, row), "whole")
 
 
+def strip(path, x0, y0, w, h, size=128):
+    """A strip of an IE sheet laid along the part at 16px per block, unstretched (long trims, the base)."""
+    return ("ie", path, ("strip", x0, y0, w, h, size))
+
+
 def rect(path, x0, y0, w, h, size=128):
     """One tile of an IE sheet stretched over the whole part (ports and the like)."""
     return ("ie", path, ("rect", x0, y0, w, h, size))
 
 
-RS_PORT = rect("multiblocks/multiblock_components", 96, 48, 16, 16)     # IE redstone control port
-POWER_PORT = rect("multiblocks/multiblock_components", 0, 64, 16, 16)    # IE power input port (on top, for a connector)
-ITEM_PORT = rect("multiblocks/multiblock_components", 48, 32, 16, 16)   # IE item port (orange light)
+# The base, as IE's Automated Workbench base (its 64px sheet): metal with vents, wood band, wood windows, posts,
+# and its redstone panel
+AUTOWB = "multiblocks/autoworkbench"
+BASE = {"base_metal": strip(AUTOWB, 0, 56, 48, 8, 64), "base_band": strip(AUTOWB, 0, 53, 48, 3, 64),
+        "base_window": rect(AUTOWB, 36, 48, 12, 5, 64), "base_post": rect(AUTOWB, 41, 5, 3, 5, 64),
+        "base_panel": rect(AUTOWB, 48, 50, 12, 14, 64)}
+# Above the base, the Automated Workbench's silver housing: its ribbed strip (two blocks wide, one tall) on the walls
+# and roof, its power port tile on the roof, and the grey trim line over its wood band on the belt rails
+RIBS = ("ie", AUTOWB, ("ribs", 0, 36, 64))
+POWER_PORT = rect(AUTOWB, 56, 0, 8, 8, 64)
+ITEM_PORT = rect(AUTOWB, 36, 36, 8, 8, 64)     # the workbench's item input (blue light)
+RAIL_GREY = rect(AUTOWB, 0, 53, 16, 1, 64)       # the workbench's grey trim line (row 53), plain dark grey
 PANEL_LIGHT = ("sheet", (0, 0), ("panel9", 0, 64))     # long sheet panels, redstone-port greys
 PANEL_DARK = ("sheet", (0, 0), ("panel9", 64, 64))     # long sheet panels, item-port greys
 STEEL_H = ie("metal/sheetmetal_steel", "tile_r")            # IE steel sheet, stripes running horizontally
@@ -57,36 +72,46 @@ BY_COLOR = {
     "mech": ie("metal/sheetmetal_iron"), "accent": ie("metal/sheetmetal_brown"), "hydro": ie("metal/sheetmetal_blue"),
     "dark": ie("metal_decoration/radiator", "whole"), "red": ie("metal_decoration/redstone_engineering", "whole"),
     "belt": ie("conveyor/conveyor", "belt"), "grille": ie("metal_decoration/steel_scaffolding_top_grate_top"),
-    "screen": sheet(0, 0), "white": sheet(1, 0), "glass": sheet(2, 0), "brass": sheet(0, 1), "copper": sheet(1, 1),
-    "rubber": sheet(2, 1), "lamp": sheet(0, 3),
+    "screen": ("sheet", (0, 0), ("rect", 0, 0, 12, 7, 128)), "white": sheet(1, 0), "glass": sheet(2, 0), "brass": sheet(0, 1), "copper": sheet(1, 1),
 }
 # by part name, overriding the colour
 BY_NAME = {
-    "plinth": STEEL_LIGHT, "roof": STEEL_H, "roof_cap": STEEL_H,
-    "base_trim": WOOD, "upper_trim": WOOD,
-    "belt_rail_back": STEEL_LIGHT, "belt_rail_front": STEEL_LIGHT,
-    "lamp_plate": ie("metal/sheetmetal_steel", "whole_r"),   # turned to match the roof under it
-    "port_lip": ie("metal/sheetmetal_steel"),   # raised lip under the roof ports, same steel as the roof
-    "rs_lamp": RS_PORT, "power_port": POWER_PORT, "power_lip": ie("metal/sheetmetal_steel"), "intake": ITEM_PORT,
+    "roof": RIBS, "roof_cap": RIBS, "back_wall": RIBS, "portal_post": RAIL_GREY, "gate_header": ("ie", AUTOWB, ("ribs", 0, 36, 64, (0, 1.22))),
+    "upper_trim": WOOD,
+    "belt_rail_back": RAIL_GREY, "belt_rail_front": RAIL_GREY,
+    "power_port": POWER_PORT, "intake": ITEM_PORT, "intake_light": rect(AUTOWB, 44, 38, 3, 4, 64),
     "sight_glass": sheet(3, 1), "feed_tube": sheet(2, 0),
+    "tube_hole": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)), "tube_hole_bottom": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)), "nozzle_hole": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)),
+    "sight_hole_top": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)), "sight_hole_bottom": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)),   # the screens' dark display colour
 }
 
 # station heads: machined look (turned steel, chrome, gunmetal housings, red handwheel)
-TURNED, CHROME, HOUSING, KNURL = sheet(1, 2), sheet(2, 2), sheet(4, 2), sheet(2, 3)
+TURNED, HOUSING = sheet(1, 2), sheet(4, 2)
+PLAIN_HOUSING = ("sheet", (2, 1), "tile")     # the housing, flat (no edges or stripes): the heads' blocks all match
+POWDER_LOW = ie("metal/sheetmetal_steel")    # plain parts of the station heads (powder funnel and nozzle, feeder jaws): flat IE steel at true scale
+PRESS_LIGHT = rect("metal/sheetmetal_aluminum", 9, 0, 1, 16, 16)   # the press's rods, ram and die: one plain aluminium column, uniform
 # Moving parts, exported as ammo_assembler_<group>.obj and drawn by AmmoAssemblerRenderer instead of the static model.
 # Their pivots and strokes live in the renderer; keep the names in sync.
 DYNAMIC = {
-    "powder": ("drop_tube", "expander_tip"),
+    "powder": ("drop_tube", "nozzle_tip", "nozzle_hole"),
     "wheel": ("metering_wheel",),
-    "jaws": ("jaw_left", "jaw_right"),
-    "press": ("crosshead", "ram", "seating_die", "lock_ring"),
-    # not moving, but switched: the renderer moves it onto the lit lamp tile (one tile right) while the machine has energy
-    "lamp": ("power_lamp",),
+    "fingers_left": ("finger_l",), "fingers_right": ("finger_r",),   # slid in by the renderer to fit each round
+    "press": ("crosshead", "ram", "seating_die", "die_lock_ring", "die_mouth"),
+    # not moving, but switched: the renderer moves it onto the empty glass tile (one tile right) when there's no gunpowder
+    "sight": ("sight_glass",),
+    # not moving: glass that crosses a block boundary, drawn by the renderer so it's lit evenly
+    "tube": ("feed_tube",),
+    # not moving: the heads' dark blocks, drawn by the renderer so they're lit the same as the press's crosshead
+    "blocks": ("metering_valve", "escapement"),
 }
+BY_NAME.update(BASE)
 BY_NAME.update({
-    "metering_valve": HOUSING, "escapement": HOUSING, "metering_wheel": sheet(3, 2),
-    "pawl_lever": TURNED, "funnel_cone": TURNED, "drop_tube": TURNED, "seating_die": TURNED,
-    "jaw_left": KNURL, "jaw_right": KNURL, "ram": CHROME, "guide_rod": CHROME,
+    "metering_valve": PLAIN_HOUSING, "escapement": PLAIN_HOUSING,
+    "metering_wheel": ("sheet", (3, 2), ("rim", (5, 1))),   # handwheel face, plain red edge
+    "seating_die": PRESS_LIGHT, "crosshead": PLAIN_HOUSING, "die_lock_ring": PLAIN_HOUSING, "die_mouth": ("sheet", (0, 0), ("rect", 2, 2, 8, 3, 128)),
+    "nozzle_collar": PLAIN_HOUSING, "drop_tube": POWDER_LOW, "nozzle_tip": ("sheet", (0, 0), ("rect", 0, 20, 4, 3, 128)),   # the bright band of our brass tile
+    "finger_l": PRESS_LIGHT, "finger_r": PRESS_LIGHT, "ram": PRESS_LIGHT,
+    "guide_rod": PRESS_LIGHT,   # one plain column for both 1px rods, off the seams
 })
 
 
@@ -154,7 +179,7 @@ for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
     bm = bmesh.new()
     bm.from_mesh(ob.data)
     # cut tiling textures at block boundaries: a Minecraft face can't repeat its texture
-    if mode in ("tile", "tile_r", "belt") or (isinstance(mode, tuple) and mode[0] != "rect"):
+    if mode in ("tile", "tile_r", "belt") or (isinstance(mode, tuple) and mode[0] not in ("rect", "rim")):
         pts = [to_obj(ob.matrix_world @ v.co) for v in bm.verts]
         for axis, bl_axis, sign in ((0, Vector((1, 0, 0)), 1), (1, Vector((0, 0, 1)), 1), (2, Vector((0, -1, 0)), 1)):
             lo, hi = min(p[axis] for p in pts), max(p[axis] for p in pts)
@@ -266,6 +291,22 @@ for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
                 px = ox + (sx + fu) * 16
                 py = oy + sy * 16 + (1 - fv) * 16
                 out.append((px / 128, 1 - py / 128))
+        elif isinstance(mode, tuple) and mode[0] == "ribs":
+            # IE's housing strip: 18px across per block, repeating every two blocks; along the ribs it spans the
+            # whole part once, so its framed top and bottom rows only show at the part's edges. On top faces the
+            # ribs run along the machine (x), as on the workbench's roof
+            x0, y0, size = mode[1:4]
+            if ax == 1:
+                coords, a_ref, (b0, b1) = [(p.z, p.x) for p in pts], c.z, (min(xs), max(xs))
+            else:
+                coords, a_ref, (b0, b1) = uvs, ref[0], (min(ys), max(ys))
+                if len(mode) > 4:   # take the ribs' height from a neighbouring wall, so they line up with it
+                    b0, b1 = mode[4]
+            out = []
+            for a, b in coords:
+                fa = a - 2 * math.floor(a_ref / 2)
+                fb = (b - b0) / ((b1 - b0) or 1)
+                out.append(((x0 + fa * 18) / size, 1 - (y0 + (1 - fb) * 16) / size))
         elif mode in ("tile", "belt"):
             out = [(frac(u, ref[0]), frac(v, ref[1])) for u, v in uvs]
         elif mode == "tile_r":
@@ -275,10 +316,31 @@ for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
             out = [((u - u0) / ((u1 - u0) or 1), (v - v0) / ((v1 - v0) or 1)) for u, v in uvs]
             if kind == "sheet":
                 col, row = key
-                out = [((col + u) / 8, 1 - (row + 1 - v) / 8) for u, v in out]
+                # a disc's edge (faces off its thin axis) takes its own tile
+                if isinstance(mode, tuple) and mode[0] == "rim":
+                    extents = (max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
+                    if ax != min(range(3), key=lambda i: extents[i]):
+                        col, row = mode[1]
+                if isinstance(mode, tuple) and mode[0] == "rect":     # a pixel rectangle of our sheet
+                    _, x0, y0, w, h, size = mode
+                    out = [((x0 + u * w) / size, 1 - (y0 + (1 - v) * h) / size) for u, v in out]
+                else:
+                    out = [((col + u) / 8, 1 - (row + 1 - v) / 8) for u, v in out]
             elif isinstance(mode, tuple) and mode[0] == "rect":
                 _, x0, y0, w, h, size = mode
                 out = [((x0 + u * w) / size, 1 - (y0 + (1 - v) * h) / size) for u, v in out]
+            elif isinstance(mode, tuple) and mode[0] == "strip":
+                # laid along the face at 16px per block from its left end; top and bottom faces take the strip's
+                # top or bottom row
+                _, x0, y0, w, h, size = mode
+                out = []
+                for u, v in uvs:
+                    px = x0 + min((u - u0) * 16, w)
+                    if ax == 1:
+                        py = y0 + (0.5 if n.y > 0 else h - 0.5)
+                    else:
+                        py = y0 + min((v1 - v) * 16, h)
+                    out.append((px / size, 1 - py / size))
             elif mode == "whole_r":
                 out = [(v, 1 - u) for u, v in out]
         if kind == "sheet" and mode in ("tile", "tile_r"):   # one sheet tile, repeated per block
@@ -353,7 +415,9 @@ cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
 cam.data.type = 'ORTHO'
 scene.collection.objects.link(cam)
 scene.camera = cam
-for name, center, scale, d in (("tex_front_left", (0.5, 0.5, 1.0), 5.0, (-0.55, -1, 0.5)),
+for name, center, scale, d in (("tex_front", (0.5, 0.5, 1.0), 4.0, (0, -1, 0)),
+                               ("tex_front_heads", (0.5, 0.82, 1.0), 3.1, (0, -1, 0)),
+                               ("tex_front_left", (0.5, 0.5, 1.0), 5.0, (-0.55, -1, 0.5)),
                                ("tex_front_right", (0.5, 0.5, 1.0), 5.0, (0.6, -1, 0.5)),
                                ("tex_stations", (0.6, 0.85, 1.5), 2.7, (0.3, -1, 0.3)),
                                ("tex_ceiling", (0.5, 1.0, 1.6), 2.7, (0.2, -1, -0.45)),
@@ -362,9 +426,15 @@ for name, center, scale, d in (("tex_front_left", (0.5, 0.5, 1.0), 5.0, (-0.55, 
                                ("tex_end_output", (0.5, 0.5, 1.0), 3.4, (1, 0, 0.12)),
                                ("tex_roof_ports", (0.0, 2.0, 1.5), 2.2, (0.35, -1, 1.1)),
                                ("tex_end_output_zoom", (2.0, 0.65, 0.66), 1.3, (1, 0, 0.05)),
-                               ("tex_power_input", (1.5, 2.0, 0.5), 2.4, (0.45, 1, 0.9))):
+                               ("tex_power_input", (1.5, 2.0, 0.5), 2.4, (0.45, 1, 0.9)),
+                               ("tex_powder_head", (-0.5, 0.85, 1.5), 1.3, (0.45, -1, 0.15)),
+                               ("tex_feeder_head", (0.5, 0.85, 1.5), 1.3, (0.45, -1, 0.15)),
+                               ("tex_feeder_under", (0.5, 0.62, 1.5), 0.7, (0.25, -0.6, -1)),
+                               ("tex_press_head", (1.5, 0.85, 1.5), 1.3, (0.45, -1, 0.15)),
+                               ("tex_wheel_edge", (-0.5, 1.03, 1.7), 0.5, (-1, -0.35, 0.1))):
     ctr = Vector((center[0], -center[2], center[1]))
     cam.data.ortho_scale = scale
+    cam.data.clip_start = 19.6 if name.endswith("_under") else 0.1   # look up past the base and belt
     cam.location = ctr + Vector(d).normalized() * 20
     cam.rotation_euler = (ctr - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.render.filepath = os.path.join(out_dir, f"{name}.png")

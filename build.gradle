@@ -62,10 +62,16 @@ repositories {
     flatDir {
         dir 'libs'
     }
-    // JEI, only for looking up recipes in the dev game
+    // JEI, Controlling and Searchables (dev game)
     maven {
         name = "BlameJared"
         url = "https://maven.blamejared.com"
+    }
+    // Mouse Tweaks (dev game), from Modrinth's Maven
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content { includeGroup "maven.modrinth" }
     }
 }
 
@@ -82,6 +88,11 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:jei-1.20.1-common-api:${jei_version}")
     compileOnly fg.deobf("mezz.jei:jei-1.20.1-forge-api:${jei_version}")
     runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}")
+
+    // Convenience mods for the dev game only: inventory mouse shortcuts, and a searchable controls screen
+    runtimeOnly fg.deobf("maven.modrinth:mouse-tweaks:${mouse_tweaks_version}")
+    runtimeOnly fg.deobf("com.blamejared.controlling:Controlling-forge-1.20.1:${controlling_version}")
+    runtimeOnly fg.deobf("com.blamejared.searchables:Searchables-forge-1.20.1:${searchables_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {

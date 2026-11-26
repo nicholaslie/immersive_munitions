@@ -24,12 +24,12 @@ public class PowderSmokeParticle extends TextureSheetParticle {
         xd = vx;
         yd = vy;
         zd = vz;
-        friction = 0.8f;
+        friction = 0.9f;
         gravity = 0;
         hasPhysics = false;
-        lifetime = 10 + random.nextInt(5);
-        quadSize = 0.05f + random.nextFloat() * 0.03f;
-        float shade = 0.72f + random.nextFloat() * 0.15f;
+        lifetime = 20 + random.nextInt(10);
+        quadSize = 0.08f + random.nextFloat() * 0.05f;
+        float shade = 0.5f + random.nextFloat() * 0.15f;   // mid grey, so it shows against the silver walls
         setColor(shade, shade, shade * 0.95f);
         alpha = 0.85f;
         setSpriteFromAge(sprites);

@@ -8,6 +8,7 @@ import dev.immersive_munitions.registry.ModMenus;
 import dev.immersive_munitions.registry.ModMultiblocks;
 import dev.immersive_munitions.registry.ModParticles;
 import dev.immersive_munitions.registry.ModRecipes;
+import dev.immersive_munitions.registry.ModSounds;
 import dev.immersive_munitions.registry.ModTabs;
 import dev.immersive_munitions.worldgen.ModBiomeModifiers;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -34,6 +35,7 @@ public class ImmersiveMunitions {
         ModRecipes.TYPES.register(bus);
         ModRecipes.SERIALIZERS.register(bus);
         ModParticles.TYPES.register(bus);
+        ModSounds.SOUNDS.register(bus);
         ModMenus.MENUS.register(bus);
         ModTabs.TABS.register(bus);
         ModBiomeModifiers.SERIALIZERS.register(bus);
