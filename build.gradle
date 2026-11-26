@@ -54,6 +54,10 @@ repositories {
     }
 }
 
+configurations {
+    devMods { transitive = false }
+}
+
 dependencies {
     implementation "maven.modrinth:immersiveengineering:${ie_version}"
     implementation "maven.modrinth:timeless-and-classics-zero:${tacz_version}"
@@ -65,6 +69,11 @@ dependencies {
     compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jei_version}"
     runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+
+    // Dev game only: Sodium and Lithium, which most players run, so we test with them. Sodium ships as a loader
+    // library that unpacks the real mod at startup, which only works from a mods folder (installDevMods), not the classpath
+    devMods "maven.modrinth:sodium:${sodium_version}"
+    runtimeOnly "maven.modrinth:lithium:${lithium_version}"
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
@@ -91,3 +100,10 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs += ['-Xmaxerrs', '2000']
 }
+
+// Dev-game mods that have to load from a mods folder, like a normal install (Sodium); copied in before each launch
+var installDevMods = tasks.register('installDevMods', Copy) {
+    from configurations.devMods
+    into project.file('run-1.21.1/mods')
+}
+tasks.named('prepareClientRun') { dependsOn installDevMods }

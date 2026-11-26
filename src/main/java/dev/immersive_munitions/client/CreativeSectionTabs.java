@@ -26,7 +26,7 @@ import java.util.List;
  */
 @EventBusSubscriber(modid = ImmersiveMunitions.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public final class CreativeSectionTabs {
-    // the recipe book's tab sprites (nine-sliced, so they stretch to our widths)
+    // the recipe book's tab sprites
     private static final ResourceLocation TAB = ResourceLocation.withDefaultNamespace("recipe_book/tab");
     private static final ResourceLocation TAB_SELECTED = ResourceLocation.withDefaultNamespace("recipe_book/tab_selected");
     private static final int SPACING = 29;
@@ -48,9 +48,10 @@ public final class CreativeSectionTabs {
         refreshButtons();
     }
 
-    // Checked every frame so the buttons follow tab switches and reopening the screen.
+    // Checked at the start of every frame (where TaCZ hooks its sidebar) so the buttons follow tab switches and
+    // reopening the screen
     @SubscribeEvent
-    public static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
+    public static void onRender(ScreenEvent.Render.Pre event) {
         if (event.getScreen() instanceof CreativeModeInventoryScreen) refreshButtons();
     }
 
@@ -86,8 +87,12 @@ public final class CreativeSectionTabs {
             boolean selected = section == ModTabs.selectedSection;
 
             RenderSystem.enableBlend();
-            // Recipe book tab sprites: the selected one is the wider, raised variant
-            graphics.blitSprite(selected ? TAB_SELECTED : TAB, getX(), getY(), selected ? 31 : 28, 26);
+            // Recipe book tab sprites, as TaCZ draws them: both are 35x27, the unselected one with five transparent
+            // columns on the right. Crop only the flat centre to keep the borders and the selected tab's join to the panel
+            ResourceLocation sprite = selected ? TAB_SELECTED : TAB;
+            int width = selected ? 31 : 28, sourceWidth = selected ? 35 : 30;
+            graphics.blitSprite(sprite, 35, 27, 0, 0, getX(), getY(), width - 3, 26);
+            graphics.blitSprite(sprite, 35, 27, sourceWidth - 3, 0, getX() + width - 3, getY(), 3, 26);
             graphics.renderItem(icon, getX() + 8, getY() + 5);
 
             if (isHovered && Minecraft.getInstance().options.touchscreen().get()) {
