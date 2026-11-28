@@ -2,11 +2,17 @@
 
 ## Unreleased
 
-Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.6.0-beta), only Fixed raises the last (0.5.1-beta).
+Changes since the last release. The next version number follows from them: anything under Added or Changed raises the middle number (0.6.0-beta), only Fixed raises the last (0.5.2-beta).
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+## 0.5.1-beta (2026-11-28)
+
+Ammunition Assembler rendering fixes.
 
 ### Fixed
 
