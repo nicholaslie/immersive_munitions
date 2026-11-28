@@ -10,6 +10,9 @@ Changes since the last release. The next version number follows from them: anyth
 
 ### Fixed
 
+- The Ammunition Assembler's front posts no longer lose their tops with Sodium: the posts, belt rails and the base's band and posts drew from pixels next to see-through ones on IE's texture, so mipmaps blended holes in.
+- The corners of the Ammunition Assembler's base no longer flicker: the side and end walls each had a post on the same corner.
+
 ## 0.5.0-beta (2026-11-26)
 
 The first version for Minecraft 1.21.1 (NeoForge), and louder Ammunition Assembler sounds.

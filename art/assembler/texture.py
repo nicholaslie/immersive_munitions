@@ -50,15 +50,17 @@ def rect(path, x0, y0, w, h, size=128):
 # The base, as IE's Automated Workbench base (its 64px sheet): metal with vents, wood band, wood windows, posts,
 # and its redstone panel
 AUTOWB = "multiblocks/autoworkbench"
-BASE = {"base_metal": strip(AUTOWB, 0, 56, 48, 8, 64), "base_band": strip(AUTOWB, 0, 53, 48, 3, 64),
-        "base_window": rect(AUTOWB, 36, 48, 12, 5, 64), "base_post": rect(AUTOWB, 41, 5, 3, 5, 64),
+# Its band and posts (and the grey trim line below) border see-through pixels on IE's sheet, so they come from padded
+# copies on our sheet (AssemblerSheet.java): mipmaps would blend the clear pixels in, and Sodium then cuts holes
+BASE = {"base_metal": strip(AUTOWB, 0, 56, 48, 8, 64), "base_band": ("sheet", (0, 0), ("strip", 48, 54, 48, 3, 128)),
+        "base_window": rect(AUTOWB, 36, 48, 12, 5, 64), "base_post": ("sheet", (0, 0), ("rect", 22, 53, 3, 5, 128)),
         "base_panel": rect(AUTOWB, 48, 50, 12, 14, 64)}
 # Above the base, the Automated Workbench's silver housing: its ribbed strip (two blocks wide, one tall) on the walls
 # and roof, its power port tile on the roof, and the grey trim line over its wood band on the belt rails
 RIBS = ("ie", AUTOWB, ("ribs", 0, 36, 64))
 POWER_PORT = rect(AUTOWB, 56, 0, 8, 8, 64)
 ITEM_PORT = rect(AUTOWB, 36, 36, 8, 8, 64)     # the workbench's item input (blue light)
-RAIL_GREY = rect(AUTOWB, 0, 53, 16, 1, 64)       # the workbench's grey trim line (row 53), plain dark grey
+RAIL_GREY = ("sheet", (0, 0), ("rect", 0, 50, 16, 12, 128))   # the workbench's grey trim line (its row 53), plain dark grey
 PANEL_LIGHT = ("sheet", (0, 0), ("panel9", 0, 64))     # long sheet panels, redstone-port greys
 PANEL_DARK = ("sheet", (0, 0), ("panel9", 64, 64))     # long sheet panels, item-port greys
 STEEL_H = ie("metal/sheetmetal_steel", "tile_r")            # IE steel sheet, stripes running horizontally
@@ -314,7 +316,7 @@ for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
         else:                               # whole texture (or sheet tile) stretched over the part, seen from this side
             u0, u1, v0, v1 = part_bounds[(ax, n[ax] > 0)]
             out = [((u - u0) / ((u1 - u0) or 1), (v - v0) / ((v1 - v0) or 1)) for u, v in uvs]
-            if kind == "sheet":
+            if kind == "sheet" and not (isinstance(mode, tuple) and mode[0] == "strip"):
                 col, row = key
                 # a disc's edge (faces off its thin axis) takes its own tile
                 if isinstance(mode, tuple) and mode[0] == "rim":
