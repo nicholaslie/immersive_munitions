@@ -162,9 +162,12 @@ def base():
     box(-1, 2, -1, MID, 0, 2, "body", "base_metal")
     box(-1, 2, TOP, 0, 0, 2, "trim", "base_band")
     box(0.125, 0.875, -1, -0.125, 2 - R, 2.01, "red", "base_panel")
-    # front and back: posts at the corners and between the three bays, windows in the bays (the front middle bay
-    # holds the panel)
-    posts_x = [(-1, -0.8125), (-0.0625, 0.125), (0.875, 1.0625), (1.8125, 2)]
+    # one square post at each corner, so the side and end walls never both put a face on the same spot
+    for x0, x1 in ((-1, -0.8125), (1.8125, 2)):
+        for z0, z1 in ((0, 0.1875), (1.8125, 2)):
+            box(x0, x1, MID, TOP, z0, z1, "trim", "base_post")
+    # front and back: posts between the three bays, windows in the bays (the front middle bay holds the panel)
+    posts_x = [(-0.0625, 0.125), (0.875, 1.0625)]
     windows_x = [(-0.8125, -0.0625), (0.125, 0.875), (1.0625, 1.8125)]
     for z_out, z_in in ((2 - R, 2), (0, R)):
         for x0, x1 in posts_x:
@@ -174,8 +177,8 @@ def base():
                 continue
             zw = (z_out - R, z_out) if z_in == 2 else (z_in, z_in + R)
             box(x0, x1, MID, TOP, zw[0], zw[1], "accent", "base_window")
-    # the two ends (two blocks deep): posts at the corners and between the blocks, two windows
-    posts_z = [(0, 0.1875), (0.9375, 1.0625), (1.8125, 2)]
+    # the two ends (two blocks deep): a post between the blocks, two windows
+    posts_z = [(0.9375, 1.0625)]
     windows_z = [(0.1875, 0.9375), (1.0625, 1.8125)]
     for x_out, x_in in ((-1, -1 + R), (2 - R, 2)):
         for z0, z1 in posts_z:

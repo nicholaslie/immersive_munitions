@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
  *   0,2 IE steel sheet metal, brightened to the light panel grey (tiles like the roof)
  *   1,2 turned steel   2,2 chrome   3,2 red handwheel   4,2 gunmetal housing
  *   2,3 knurled jaw
+ *   0,3 IE workbench grey trim line   1,3 IE workbench base post   3..5,3 IE workbench base band (padded copies)
  *   4..7,0 conveyor rail strip (left end, middle, right end, both ends)
  *   0..3,4..7  panel set, light      4..7,4..7  panel set, dark
  *     A panel set is 4x4 cells: a 3x3 nine-slice (corners, edges, middle), plus a column for panels one block
@@ -43,6 +44,13 @@ public class AssemblerSheet {
         rim(80, 16, 0x6e1610, 0xa82a1c, 0xd8503a);
         housing(64, 32, 0x34363b, 0x26272b, 0x45484e, 0x6c6f75);  // dark gunmetal
         knurled(32, 48);
+        // IE Automated Workbench pieces whose neighbours on IE's sheet are transparent: copied here inside a padding
+        // of their own edge pixels, so mipmaps (and Sodium, which alpha-tests any quad that reaches a clear texel)
+        // never blend in the see-through pixels round them
+        BufferedImage wb = ImageIO.read(new File(IE_AUTOWB));
+        padded(wb, 0, 53, 16, 1, 0, 48, 16, 16);      // the grey trim line (posts and belt rails): every row of 0,3
+        padded(wb, 41, 5, 3, 5, 16, 48, 16, 16);      // the base's posts, at 1,3 (copied to 22,53)
+        padded(wb, 0, 53, 48, 3, 48, 48, 48, 16);     // the base's top band, at 3..5,3 (copied to rows 54-56)
 
         File out = new File(args.length > 0 ? args[0]
                 : "src/main/resources/assets/immersive_munitions/textures/block/multiblocks/ammo_assembler.png");
@@ -65,6 +73,19 @@ public class AssemblerSheet {
 
     static final String IE_STEEL = "reference/ImmersiveEngineering-1.20.1/ImmersiveEngineering-1.20.1/src/main/resources/"
             + "assets/immersiveengineering/textures/block/metal/sheetmetal_steel.png";
+
+    static final String IE_AUTOWB = "reference/ImmersiveEngineering-1.20.1/ImmersiveEngineering-1.20.1/src/main/resources/"
+            + "assets/immersiveengineering/textures/block/multiblocks/autoworkbench.png";
+
+    // Copies the w x h block at (sx, sy) of src into the cell (cx, cy, cw, ch), centred, and fills the rest of the cell
+    // with its nearest edge pixel
+    static void padded(BufferedImage src, int sx, int sy, int w, int h, int cx, int cy, int cw, int ch) {
+        int ox = (cw - w) / 2, oy = (ch - h) / 2;
+        for (int y = 0; y < ch; y++) for (int x = 0; x < cw; x++) {
+            int ix = Math.min(Math.max(x - ox, 0), w - 1), iy = Math.min(Math.max(y - oy, 0), h - 1);
+            px(cx + x, cy + y, src.getRGB(sx + ix, sy + iy) & 0xffffff);
+        }
+    }
 
     static void px(int x, int y, int rgb) {
         IMG.setRGB(x, y, 0xff000000 | rgb);
